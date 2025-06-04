@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useMediaQuery } from "@/hooks/use-media-query"
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", color: "from-blue-500 to-blue-600" },
@@ -42,6 +43,7 @@ export default function MobileSidebar() {
   const [hoveredItem, setHoveredItem] = useState(null)
   const [particles, setParticles] = useState([])
   const pathname = usePathname()
+  const isSmallScreen = useMediaQuery("(max-width: 1023px)")
 
   useEffect(() => {
     // Generate floating particles for sidebar
@@ -123,19 +125,24 @@ export default function MobileSidebar() {
     },
   }
 
+  // Only render on small screens
+  if (!isSmallScreen) {
+    return null
+  }
+
   return (
-    <div className="lg:hidden">
-      {/* Mobile Menu Button - ONLY visible on small screens */}
+    <>
+      {/* Mobile Menu Button - Positioned to overlap with Dashboard text */}
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white"
+        className="fixed top-1 left-4 z-[50] bg-[#1a1a3e] backdrop-blur-md hover:bg-white/30 text-white shadow-lg border border-white/20"
         onClick={toggleSidebar}
       >
         <Menu className="h-5 w-5" />
       </Button>
 
-      {/* Overlay - ONLY visible on small screens */}
+      {/* Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -143,13 +150,13 @@ export default function MobileSidebar() {
             animate="open"
             exit="closed"
             variants={overlayVariants}
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-black/50 z-[9998]"
             onClick={closeSidebar}
           />
         )}
       </AnimatePresence>
 
-      {/* Mobile Sidebar - ONLY visible on small screens */}
+      {/* Mobile Sidebar */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -157,7 +164,7 @@ export default function MobileSidebar() {
             animate="open"
             exit="closed"
             variants={sidebarVariants}
-            className="bg-gradient-to-b from-[#0f0f23] via-[#1a1a3e] to-[#2d1b69] text-white flex flex-col fixed left-0 top-0 h-screen z-50 shadow-2xl overflow-hidden w-[75%] sm:w-[60%] md:w-[50%]"
+            className="bg-gradient-to-b from-[#0f0f23] via-[#1a1a3e] to-[#2d1b69] text-white flex flex-col fixed left-0 top-0 h-screen z-[9999] shadow-2xl overflow-hidden w-[75%] sm:w-[60%] md:w-[50%]"
           >
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
@@ -374,15 +381,6 @@ export default function MobileSidebar() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* CSS Media Query Override for Extra Safety */}
-      <style jsx>{`
-        @media (min-width: 1024px) {
-          .mobile-sidebar-container {
-            display: none !important;
-          }
-        }
-      `}</style>
-    </div>
+    </>
   )
 }
