@@ -4,38 +4,26 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  AreaChart,
-  Area,
-} from "recharts"
 import {
   Users,
   Clock,
   UserCheck,
   Activity,
   TrendingUp,
-  Bell,
   ArrowUp,
   ArrowDown,
   Sparkles,
   Stethoscope,
   FlaskConical,
   Pill,
-  Menu,
 } from "lucide-react"
 import Sidebar from "@/components/sidebar"
+import MobileSidebar from "@/components/mobile-sidebar"
+import dynamic from "next/dynamic"
+
+// Dynamically import chart components to avoid SSR issues
+const Chart = dynamic(() => import("react-apexcharts"), { ssr: false })
 
 const statsData = [
   {
@@ -108,22 +96,35 @@ const recentActivities = [
 ]
 
 export default function Dashboard() {
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const [notifications, setNotifications] = useState(3)
+  const [currentTime, setCurrentTime] = useState("")
   const [selectedMetric, setSelectedMetric] = useState("patients")
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userInfo, setUserInfo] = useState({ name: "", role: "" })
+  const [mounted, setMounted] = useState(false)
 
+  // Fix hydration error by only setting the time after component mounts
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    setMounted(true)
+
+    // Set initial time
+    const now = new Date()
+    setCurrentTime(now.toLocaleTimeString())
+
+    // Update time every second
+    const timer = setInterval(() => {
+      const now = new Date()
+      setCurrentTime(now.toLocaleTimeString())
+    }, 1000)
+
     return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
     // Get user info from localStorage and parse role
-    const username = localStorage.getItem("username") || "user@example.com"
-    const { name, role } = parseUserInfo(username)
-    setUserInfo({ name, role })
+    if (typeof window !== "undefined") {
+      const username = localStorage.getItem("username") || "leofleet@gmail.com"
+      const { name, role } = parseUserInfo(username)
+      setUserInfo({ name, role })
+    }
   }, [])
 
   const parseUserInfo = (username) => {
@@ -171,17 +172,6 @@ export default function Dashboard() {
     },
   }
 
-  const pulseVariants = {
-    animate: {
-      scale: [1, 1.05, 1],
-      transition: {
-        duration: 2,
-        repeat: Number.POSITIVE_INFINITY,
-        ease: "easeInOut",
-      },
-    },
-  }
-
   const getActivityIcon = (type) => {
     switch (type) {
       case "consultation":
@@ -212,80 +202,176 @@ export default function Dashboard() {
     }
   }
 
+  // Get current date formatted
+  const formattedDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+
+  // ApexCharts options for line chart
+  const lineChartOptions = {
+    chart: {
+      type: "line",
+      toolbar: {
+        show: false,
+      },
+      animations: {
+        enabled: true,
+        easing: "easeinout",
+        speed: 800,
+        animateGradually: {
+          enabled: true,
+          delay: 150,
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350,
+        },
+      },
+    },
+    colors: ["#581c87", "#7c3aed"],
+    stroke: {
+      curve: "smooth",
+      width: [3, 2],
+    },
+    xaxis: {
+      categories: chartData.map((item) => item.name),
+    },
+    fill: {
+      type: "gradient",
+      gradient: {
+        shade: "light",
+        type: "vertical",
+        shadeIntensity: 0.5,
+        opacityFrom: 0.7,
+        opacityTo: 0.2,
+        stops: [0, 90, 100],
+      },
+    },
+    tooltip: {
+      theme: "light",
+      x: {
+        show: true,
+      },
+    },
+    grid: {
+      borderColor: "#e0e7ff",
+      strokeDashArray: 3,
+    },
+  }
+
+  // ApexCharts options for bar chart
+  const barChartOptions = {
+    chart: {
+      type: "bar",
+      toolbar: {
+        show: false,
+      },
+      animations: {
+        enabled: true,
+        easing: "easeinout",
+        speed: 800,
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350,
+        },
+      },
+    },
+    colors: ["#a855f7"],
+    plotOptions: {
+      bar: {
+        borderRadius: 8,
+        columnWidth: "60%",
+      },
+    },
+    xaxis: {
+      categories: chartData.map((item) => item.name),
+    },
+    grid: {
+      borderColor: "#e0e7ff",
+      strokeDashArray: 3,
+    },
+  }
+
+  // ApexCharts options for pie chart
+  const pieChartOptions = {
+    chart: {
+      type: "donut",
+      animations: {
+        enabled: true,
+        easing: "easeinout",
+        speed: 800,
+        animateGradually: {
+          enabled: true,
+          delay: 150,
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350,
+        },
+      },
+    },
+    colors: serviceData.map((item) => item.color),
+    labels: serviceData.map((item) => item.name),
+    legend: {
+      show: false,
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "55%",
+        },
+      },
+    },
+    responsive: [
+      {
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: 200,
+          },
+          legend: {
+            position: "bottom",
+          },
+        },
+      },
+    ],
+  }
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/30 to-blue-50/30">
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {/* Include both sidebars */}
+      <Sidebar />
+      <MobileSidebar />
 
       <main className="flex-1 lg:ml-64 min-h-screen overflow-y-auto">
-        <div className="p-4 lg:p-6">
+        <div className="p-4 lg:p-6 pt-16 lg:pt-6">
           <motion.div variants={containerVariants} initial="hidden" animate="visible">
             {/* Header */}
             <motion.div variants={itemVariants} className="flex justify-between items-center mb-6 lg:mb-8">
-              <div className="flex items-center gap-4">
-                {/* Mobile Menu Button */}
-                <Button variant="outline" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-                  <Menu className="h-5 w-5" />
-                </Button>
-
-                <div>
-                  <motion.h1
-                    className="text-2xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-purple-800 to-blue-800 bg-clip-text text-transparent"
-                    animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
-                    transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
-                  >
-                    Dashboard
-                  </motion.h1>
-                  <motion.p
-                    className="text-gray-600 mt-1 text-sm lg:text-base"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    {currentTime.toLocaleDateString("en-US", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </motion.p>
-                </div>
+              <div>
+                <motion.h1
+                  className="text-2xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-purple-800 to-blue-800 bg-clip-text text-transparent"
+                  animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
+                >
+                  Dashboard
+                </motion.h1>
+                <motion.p
+                  className="text-gray-600 mt-1 text-sm lg:text-base"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  {formattedDate}
+                </motion.p>
               </div>
 
               <div className="flex items-center gap-4">
-                {/* Notifications */}
-                <motion.div className="relative" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <Button variant="outline" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    <AnimatePresence>
-                      {notifications > 0 && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
-                        >
-                          {notifications}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </Button>
-                </motion.div>
-
                 {/* User Info & Time Display */}
-                <motion.div className="text-right" variants={pulseVariants} animate="animate">
+                <motion.div className="text-right">
                   <motion.p
                     className="text-sm font-medium bg-gradient-to-r from-[#581c87] to-[#7c3aed] bg-clip-text text-transparent"
                     initial={{ opacity: 0, y: -10 }}
@@ -294,15 +380,16 @@ export default function Dashboard() {
                   >
                     Welcome back {userInfo.role} {userInfo.name}
                   </motion.p>
-                  <motion.p
-                    className="text-lg font-bold bg-gradient-to-r from-[#581c87] to-[#7c3aed] bg-clip-text text-transparent"
-                    key={currentTime.toLocaleTimeString()}
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    {currentTime.toLocaleTimeString()}
-                  </motion.p>
+                  {mounted && (
+                    <motion.p
+                      className="text-lg font-bold bg-gradient-to-r from-[#581c87] to-[#7c3aed] bg-clip-text text-transparent"
+                      initial={{ scale: 1.1 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      {currentTime}
+                    </motion.p>
+                  )}
                 </motion.div>
               </div>
             </motion.div>
@@ -324,28 +411,6 @@ export default function Dashboard() {
                   className="group"
                 >
                   <Card className="relative overflow-hidden hover:shadow-2xl transition-all duration-500 transform perspective-1000 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                    {/* Animated Background */}
-                    <motion.div
-                      className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
-                      initial={false}
-                      animate={{ opacity: 0 }}
-                      whileHover={{ opacity: 0.1 }}
-                    />
-
-                    {/* Floating Particles */}
-                    <motion.div
-                      className="absolute top-2 right-2 w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-0 group-hover:opacity-100"
-                      animate={{
-                        y: [0, -10, 0],
-                        opacity: [0, 1, 0],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Number.POSITIVE_INFINITY,
-                        delay: index * 0.2,
-                      }}
-                    />
-
                     <CardContent className="p-4 lg:p-6 relative z-10">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -430,66 +495,46 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="h-[250px] lg:h-[300px]">
-                      <ResponsiveContainer width="100%" height="100%">
+                      {mounted && (
                         <AnimatePresence mode="wait">
                           {selectedMetric === "patients" ? (
-                            <AreaChart data={chartData}>
-                              <defs>
-                                <linearGradient id="patientsGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#581c87" stopOpacity={0.3} />
-                                  <stop offset="95%" stopColor="#581c87" stopOpacity={0} />
-                                </linearGradient>
-                                <linearGradient id="completedGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3} />
-                                  <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                              <XAxis dataKey="name" stroke="#6b7280" />
-                              <YAxis stroke="#6b7280" />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: "rgba(255, 255, 255, 0.95)",
-                                  border: "none",
-                                  borderRadius: "8px",
-                                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-                                }}
+                            <motion.div
+                              key="patients"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="h-full"
+                            >
+                              <Chart
+                                options={lineChartOptions}
+                                series={[
+                                  { name: "Patients", data: chartData.map((item) => item.patients) },
+                                  { name: "Completed", data: chartData.map((item) => item.completed) },
+                                ]}
+                                type="line"
+                                height="100%"
                               />
-                              <Area
-                                type="monotone"
-                                dataKey="patients"
-                                stroke="#581c87"
-                                fillOpacity={1}
-                                fill="url(#patientsGradient)"
-                                strokeWidth={3}
-                              />
-                              <Area
-                                type="monotone"
-                                dataKey="completed"
-                                stroke="#7c3aed"
-                                fillOpacity={1}
-                                fill="url(#completedGradient)"
-                                strokeWidth={2}
-                              />
-                            </AreaChart>
+                            </motion.div>
                           ) : (
-                            <BarChart data={chartData}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                              <XAxis dataKey="name" stroke="#6b7280" />
-                              <YAxis stroke="#6b7280" />
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: "rgba(255, 255, 255, 0.95)",
-                                  border: "none",
-                                  borderRadius: "8px",
-                                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-                                }}
+                            <motion.div
+                              key="revenue"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="h-full"
+                            >
+                              <Chart
+                                options={barChartOptions}
+                                series={[{ name: "Revenue", data: chartData.map((item) => item.revenue) }]}
+                                type="bar"
+                                height="100%"
                               />
-                              <Bar dataKey="revenue" fill="#a855f7" radius={[8, 8, 0, 0]} />
-                            </BarChart>
+                            </motion.div>
                           )}
                         </AnimatePresence>
-                      </ResponsiveContainer>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -511,31 +556,14 @@ export default function Dashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="h-[200px] lg:h-[250px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={serviceData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={40}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="value"
-                          >
-                            {serviceData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "rgba(255, 255, 255, 0.95)",
-                              border: "none",
-                              borderRadius: "8px",
-                              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+                      {mounted && (
+                        <Chart
+                          options={pieChartOptions}
+                          series={serviceData.map((item) => item.value)}
+                          type="donut"
+                          height="100%"
+                        />
+                      )}
                     </div>
 
                     {/* Legend */}
@@ -566,14 +594,7 @@ export default function Dashboard() {
                   <CardHeader>
                     <div className="flex justify-between items-center">
                       <CardTitle className="flex items-center gap-2">
-                        <motion.div
-                          animate={{
-                            boxShadow: ["0 0 0 0 rgba(139, 92, 246, 0.7)", "0 0 0 10px rgba(139, 92, 246, 0)"],
-                          }}
-                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                        >
-                          <Users className="h-5 w-5 text-[#581c87]" />
-                        </motion.div>
+                        <Users className="h-5 w-5 text-[#581c87]" />
                         Patients Waiting
                       </CardTitle>
                       <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
@@ -589,25 +610,14 @@ export default function Dashboard() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          whileHover={{
-                            scale: 1.02,
-                            backgroundColor: "rgba(139, 92, 246, 0.05)",
-                            transition: { duration: 0.2 },
-                          }}
-                          className="flex items-center justify-between p-3 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group"
+                          className="flex items-center justify-between p-3 border rounded-lg hover:shadow-md transition-all duration-200"
                         >
                           <div className="flex items-center gap-3">
-                            <motion.div
-                              className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-[#581c87] to-[#7c3aed] rounded-full flex items-center justify-center text-white text-sm font-semibold"
-                              whileHover={{ scale: 1.1 }}
-                              transition={{ duration: 0.6 }}
-                            >
+                            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-[#581c87] to-[#7c3aed] rounded-full flex items-center justify-center text-white text-sm font-semibold">
                               {patient.avatar}
-                            </motion.div>
+                            </div>
                             <div>
-                              <p className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors text-sm lg:text-base">
-                                {patient.name}
-                              </p>
+                              <p className="font-medium text-gray-900 text-sm lg:text-base">{patient.name}</p>
                               <p className="text-xs lg:text-sm text-gray-600">{patient.id}</p>
                             </div>
                           </div>
@@ -629,7 +639,7 @@ export default function Dashboard() {
                                     ? "default"
                                     : "secondary"
                               }
-                              className="animate-pulse text-xs"
+                              className="text-xs"
                             >
                               {patient.priority}
                             </Badge>
@@ -646,12 +656,7 @@ export default function Dashboard() {
                 <Card className="hover:shadow-2xl transition-all duration-500 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <motion.div
-                        animate={{ rotate: [0, 360] }}
-                        transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                      >
-                        <Sparkles className="h-5 w-5 text-[#581c87]" />
-                      </motion.div>
+                      <Sparkles className="h-5 w-5 text-[#581c87]" />
                       Recent Activity
                     </CardTitle>
                   </CardHeader>
@@ -665,29 +670,20 @@ export default function Dashboard() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-purple-50/50 transition-colors group"
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-purple-50/50 transition-colors"
                           >
-                            <motion.div
+                            <div
                               className={`p-2 rounded-lg bg-gradient-to-r from-purple-100 to-blue-100 ${getActivityColor(activity.status)}`}
-                              whileHover={{ scale: 1.1 }}
                             >
                               <IconComponent className="w-4 h-4" />
-                            </motion.div>
+                            </div>
                             <div className="flex-1">
-                              <p className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors text-sm lg:text-base">
-                                {activity.patient}
-                              </p>
+                              <p className="font-medium text-gray-900 text-sm lg:text-base">{activity.patient}</p>
                               <p className="text-xs lg:text-sm text-gray-600 capitalize">
                                 {activity.type} • {activity.status}
                               </p>
                             </div>
-                            <motion.p
-                              className="text-xs text-gray-500"
-                              animate={{ opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, delay: index * 0.2 }}
-                            >
-                              {activity.time}
-                            </motion.p>
+                            <p className="text-xs text-gray-500">{activity.time}</p>
                           </motion.div>
                         )
                       })}

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { UserPlus, Search, Hand, Phone, Calendar, User, Mail, MapPin, Scan, CheckCircle, Menu, X } from "lucide-react"
+import { UserPlus, Search, Hand, Phone, Calendar, User, Mail, MapPin, CheckCircle, Menu, X } from "lucide-react"
 import Sidebar from "@/components/sidebar"
 
 export default function PatientRegistration() {
@@ -17,7 +17,8 @@ export default function PatientRegistration() {
   const [searchQuery, setSearchQuery] = useState("")
   const [foundPatient, setFoundPatient] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [palmScanState, setPalmScanState] = useState("idle") // idle, scanning, processing, complete
+  const [showPalmScanModal, setShowPalmScanModal] = useState(false)
+  const [scanStage, setScanStage] = useState("initial") // initial, scanning, complete
   const [scanProgress, setScanProgress] = useState(0)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [formData, setFormData] = useState({
@@ -37,52 +38,77 @@ export default function PatientRegistration() {
         id: "PC123456",
         firstName: "Emily",
         lastName: "Johnson",
-        dateOfBirth: "06/15/1985",
+        dateOfBirth: "1985-06-15",
         gender: "Female",
         phone: "555-123-4567",
         email: "emily.j@example.com",
-        address: "123 Main St, City, State",
+        address: "123 Oak Street",
+        city: "Springfield",
+        state: "IL",
+        zip: "62704",
+        emergencyContact: {
+          name: "David Johnson",
+          phone: "555-987-6543",
+        },
+        medicalInfo: {
+          allergies: "",
+          history: "Hypertension",
+        },
       })
     }
   }
 
-  const handlePalmScan = async () => {
-    setPalmScanState("scanning")
+  const handlePalmScan = () => {
+    setShowPalmScanModal(true)
+    setScanStage("initial")
     setScanProgress(0)
 
-    // Simulate scanning progress - smooth and professional
-    const scanInterval = setInterval(() => {
-      setScanProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(scanInterval)
-          setPalmScanState("processing")
+    // Start scanning animation after a brief delay
+    setTimeout(() => {
+      setScanStage("scanning")
 
-          // Simulate processing
-          setTimeout(() => {
-            setPalmScanState("complete")
-            setFoundPatient({
-              id: "PC789012",
-              firstName: "Michael",
-              lastName: "Davis",
-              dateOfBirth: "03/22/1978",
-              gender: "Male",
-              phone: "555-987-6543",
-              email: "m.davis@example.com",
-              address: "456 Oak Ave, City, State",
-            })
-          }, 1500)
+      // Progress animation
+      const interval = setInterval(() => {
+        setScanProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval)
 
-          return 100
-        }
-        return prev + 1.5
-      })
-    }, 60)
+            // Show completion after scan reaches 100%
+            setTimeout(() => {
+              setScanStage("complete")
+              setFoundPatient({
+                id: "PC123456",
+                firstName: "Emily",
+                lastName: "Johnson",
+                dateOfBirth: "1985-06-15",
+                gender: "Female",
+                phone: "555-123-4567",
+                email: "emily.j@example.com",
+                address: "123 Oak Street",
+                city: "Springfield",
+                state: "IL",
+                zip: "62704",
+                emergencyContact: {
+                  name: "David Johnson",
+                  phone: "555-987-6543",
+                },
+                medicalInfo: {
+                  allergies: "",
+                  history: "Hypertension",
+                },
+              })
+            }, 1000)
+            return 100
+          }
+          return prev + 1
+        })
+      }, 30)
+    }, 500)
   }
 
-  const resetPalmScan = () => {
-    setPalmScanState("idle")
-    setScanProgress(0)
-    setFoundPatient(null)
+  const handleContinueAfterScan = () => {
+    setShowPalmScanModal(false)
+    setActiveTab("new") // Switch to new patient tab
   }
 
   const handleUpdatePalmRecord = () => {
@@ -94,253 +120,8 @@ export default function PatientRegistration() {
     // Simulate update process
     setTimeout(() => {
       alert("Palm record updated successfully!")
-    }, 1000)
+    }, 500)
   }
-
-  const PalmScanModal = () => (
-    <AnimatePresence>
-      {palmScanState !== "idle" && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            className="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl"
-          >
-            <AnimatePresence mode="wait">
-              {palmScanState === "scanning" && (
-                <motion.div
-                  key="scanning"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-6"
-                >
-                  {/* Professional Hand Icon with Subtle Animation */}
-                  <motion.div
-                    className="relative mx-auto w-24 h-24 flex items-center justify-center"
-                    animate={{
-                      scale: [1, 1.05, 1],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Number.POSITIVE_INFINITY,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.1, 0.3, 0.1],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                      }}
-                    />
-                    <Hand className="w-12 h-12 text-blue-600" />
-
-                    {/* Subtle Scanning Line */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/20 to-transparent h-0.5"
-                      animate={{
-                        y: [-10, 30, -10],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Number.POSITIVE_INFINITY,
-                        ease: "easeInOut",
-                      }}
-                    />
-                  </motion.div>
-
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Scanning Palm...</h3>
-                    <p className="text-gray-600 mb-4">Please keep your hand steady on the scanner</p>
-
-                    {/* Professional Progress Bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                      <motion.div
-                        className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${scanProgress}%` }}
-                        transition={{ duration: 0.1 }}
-                      />
-                    </div>
-
-                    <p className="text-sm text-gray-500">{Math.round(scanProgress)}% Complete</p>
-                  </div>
-
-                  <Button variant="outline" onClick={resetPalmScan} className="hover:bg-gray-50">
-                    Cancel
-                  </Button>
-                </motion.div>
-              )}
-
-              {palmScanState === "processing" && (
-                <motion.div
-                  key="processing"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-6"
-                >
-                  <motion.div
-                    className="mx-auto w-24 h-24 flex items-center justify-center"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                  >
-                    <Scan className="w-12 h-12 text-purple-600" />
-                  </motion.div>
-
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Processing...</h3>
-                    <p className="text-gray-600">Matching palm print with database</p>
-                  </div>
-
-                  <motion.div
-                    className="flex justify-center space-x-1"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-                  >
-                    {[0, 1, 2].map((i) => (
-                      <motion.div
-                        key={i}
-                        className="w-2 h-2 bg-purple-500 rounded-full"
-                        animate={{ scale: [1, 1.3, 1] }}
-                        transition={{
-                          duration: 1,
-                          repeat: Number.POSITIVE_INFINITY,
-                          delay: i * 0.2,
-                        }}
-                      />
-                    ))}
-                  </motion.div>
-                </motion.div>
-              )}
-
-              {palmScanState === "complete" && (
-                <motion.div
-                  key="complete"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-6"
-                >
-                  <motion.div
-                    className="mx-auto w-24 h-24 flex items-center justify-center"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                  >
-                    <CheckCircle className="w-12 h-12 text-green-600" />
-                  </motion.div>
-
-                  <div>
-                    <h3 className="text-xl font-bold text-green-900 mb-2">Patient Found!</h3>
-                    <p className="text-gray-600 mb-4">Palm scan successful. Patient data retrieved.</p>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm font-medium text-green-800">PalmCareConnect ID: {foundPatient?.id}</p>
-                      <p className="text-sm text-green-700">
-                        {foundPatient?.firstName} {foundPatient?.lastName}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Button
-                    onClick={() => {
-                      resetPalmScan()
-                      setActiveTab("new") // Switch to new patient tab to show populated form
-                    }}
-                    className="bg-green-600 hover:bg-green-700 text-white w-full"
-                  >
-                    Continue
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-
-  const UpdatePalmModal = () => (
-    <AnimatePresence>
-      {showUpdateModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl"
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Update Palm Scan Record</h3>
-              <Button variant="ghost" size="sm" onClick={() => setShowUpdateModal(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="text-center space-y-6">
-              <motion.div
-                className="mx-auto w-16 h-16 flex items-center justify-center bg-blue-100 rounded-full"
-                animate={{
-                  scale: [1, 1.1, 1],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Number.POSITIVE_INFINITY,
-                  ease: "easeInOut",
-                }}
-              >
-                <Hand className="w-8 h-8 text-blue-600" />
-              </motion.div>
-
-              <div>
-                <p className="text-gray-600 mb-4">
-                  Update the patient's biometric profile in the PalmCareConnect system
-                </p>
-                <p className="text-sm text-gray-800 font-medium">
-                  This will update {foundPatient?.firstName} {foundPatient?.lastName}'s palm scan record with their
-                  latest information.
-                </p>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-                <h4 className="font-medium text-blue-900 mb-2">Why update palm records?</h4>
-                <p className="text-sm text-blue-700">
-                  Keeping biometric records current ensures faster check-ins for future visits and more accurate patient
-                  identification.
-                </p>
-              </div>
-
-              <div className="flex space-x-4">
-                <Button variant="outline" onClick={() => setShowUpdateModal(false)} className="flex-1">
-                  Cancel
-                </Button>
-                <Button onClick={processUpdatePalmRecord} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
-                  Update Palm Record
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -416,22 +197,20 @@ export default function PatientRegistration() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900 mb-4">Patient Information</h3>
-                          <p className="text-sm text-gray-600 mb-6">Enter the patient's personal details</p>
-
-                          {foundPatient && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
-                            >
+                          {foundPatient ? (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                               <div className="flex items-center gap-2 mb-2">
-                                <CheckCircle className="w-5 h-5 text-blue-600" />
-                                <span className="font-medium text-blue-900">Patient Found via Palm Scan</span>
+                                <div className="bg-blue-100 p-1 rounded-md">
+                                  <CheckCircle className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <p className="font-medium text-blue-900">Patient found with ID: {foundPatient.id}</p>
                               </div>
                               <p className="text-sm text-blue-700">
-                                Form has been pre-populated with patient data from PalmCareConnect ID: {foundPatient.id}
+                                Profile retrieved from PalmCareConnect. Pre-populated fields are marked below.
                               </p>
-                            </motion.div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-600 mb-6">Enter the patient's personal details</p>
                           )}
                         </div>
 
@@ -440,6 +219,11 @@ export default function PatientRegistration() {
                             <Label htmlFor="firstName" className="flex items-center gap-2">
                               <User className="h-4 w-4 text-[#581c87]" />
                               First Name *
+                              {foundPatient && (
+                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  From Palm
+                                </Badge>
+                              )}
                             </Label>
                             <Input
                               id="firstName"
@@ -448,17 +232,17 @@ export default function PatientRegistration() {
                               className="transition-all duration-300 focus:ring-2 focus:ring-[#581c87]"
                               readOnly={!!foundPatient}
                             />
-                            {foundPatient && (
-                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                From Palm Scan
-                              </Badge>
-                            )}
                           </div>
 
                           <div className="space-y-2">
                             <Label htmlFor="lastName" className="flex items-center gap-2">
                               <User className="h-4 w-4 text-[#581c87]" />
                               Last Name *
+                              {foundPatient && (
+                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  From Palm
+                                </Badge>
+                              )}
                             </Label>
                             <Input
                               id="lastName"
@@ -467,17 +251,17 @@ export default function PatientRegistration() {
                               className="transition-all duration-300 focus:ring-2 focus:ring-[#581c87]"
                               readOnly={!!foundPatient}
                             />
-                            {foundPatient && (
-                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                From Palm Scan
-                              </Badge>
-                            )}
                           </div>
 
                           <div className="space-y-2">
                             <Label htmlFor="dob" className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-[#581c87]" />
                               Date of Birth *
+                              {foundPatient && (
+                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  From Palm
+                                </Badge>
+                              )}
                             </Label>
                             <Input
                               id="dob"
@@ -487,36 +271,38 @@ export default function PatientRegistration() {
                               className="transition-all duration-300 focus:ring-2 focus:ring-[#581c87]"
                               readOnly={!!foundPatient}
                             />
-                            {foundPatient && (
-                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                From Palm Scan
-                              </Badge>
-                            )}
                           </div>
 
                           <div className="space-y-2">
                             <Label className="flex items-center gap-2">
                               <User className="h-4 w-4 text-[#581c87]" />
                               Gender *
+                              {foundPatient && (
+                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  From Palm
+                                </Badge>
+                              )}
                             </Label>
-                            <Select
-                              value={foundPatient?.gender || formData.gender}
-                              onValueChange={(value) => setFormData({ ...formData, gender: value })}
-                              disabled={!!foundPatient}
-                            >
-                              <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-[#581c87]">
-                                <SelectValue placeholder="Select gender" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="male">Male</SelectItem>
-                                <SelectItem value="female">Female</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {foundPatient && (
-                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                From Palm Scan
-                              </Badge>
+                            {foundPatient ? (
+                              <Input
+                                value={foundPatient.gender}
+                                readOnly
+                                className="transition-all duration-300 focus:ring-2 focus:ring-[#581c87]"
+                              />
+                            ) : (
+                              <Select
+                                value={formData.gender}
+                                onValueChange={(value) => setFormData({ ...formData, gender: value })}
+                              >
+                                <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-[#581c87]">
+                                  <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="male">Male</SelectItem>
+                                  <SelectItem value="female">Female</SelectItem>
+                                  <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
                             )}
                           </div>
 
@@ -524,6 +310,11 @@ export default function PatientRegistration() {
                             <Label htmlFor="phone" className="flex items-center gap-2">
                               <Phone className="h-4 w-4 text-[#581c87]" />
                               Phone *
+                              {foundPatient && (
+                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  From Palm
+                                </Badge>
+                              )}
                             </Label>
                             <Input
                               id="phone"
@@ -533,17 +324,17 @@ export default function PatientRegistration() {
                               className="transition-all duration-300 focus:ring-2 focus:ring-[#581c87]"
                               readOnly={!!foundPatient}
                             />
-                            {foundPatient && (
-                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                From Palm Scan
-                              </Badge>
-                            )}
                           </div>
 
                           <div className="space-y-2">
                             <Label htmlFor="email" className="flex items-center gap-2">
                               <Mail className="h-4 w-4 text-[#581c87]" />
                               Email
+                              {foundPatient && (
+                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  From Palm
+                                </Badge>
+                              )}
                             </Label>
                             <Input
                               id="email"
@@ -553,11 +344,6 @@ export default function PatientRegistration() {
                               className="transition-all duration-300 focus:ring-2 focus:ring-[#581c87]"
                               readOnly={!!foundPatient}
                             />
-                            {foundPatient && (
-                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                From Palm Scan
-                              </Badge>
-                            )}
                           </div>
                         </div>
 
@@ -565,6 +351,11 @@ export default function PatientRegistration() {
                           <Label htmlFor="address" className="flex items-center gap-2">
                             <MapPin className="h-4 w-4 text-[#581c87]" />
                             Address
+                            {foundPatient && (
+                              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                From Palm
+                              </Badge>
+                            )}
                           </Label>
                           <Input
                             id="address"
@@ -574,12 +365,101 @@ export default function PatientRegistration() {
                             className="transition-all duration-300 focus:ring-2 focus:ring-[#581c87]"
                             readOnly={!!foundPatient}
                           />
-                          {foundPatient && (
-                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                              From Palm Scan
-                            </Badge>
-                          )}
                         </div>
+
+                        {foundPatient && (
+                          <>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="city" className="flex items-center gap-2">
+                                  City
+                                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                    From Palm
+                                  </Badge>
+                                </Label>
+                                <Input id="city" value={foundPatient.city} readOnly />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="state" className="flex items-center gap-2">
+                                  State
+                                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                    From Palm
+                                  </Badge>
+                                </Label>
+                                <Input id="state" value={foundPatient.state} readOnly />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="zip" className="flex items-center gap-2">
+                                  ZIP Code
+                                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                    From Palm
+                                  </Badge>
+                                </Label>
+                                <Input id="zip" value={foundPatient.zip} readOnly />
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="text-md font-semibold text-gray-900 mb-4">Emergency Contact</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="emergencyName" className="flex items-center gap-2">
+                                    Contact Name
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                    >
+                                      From Palm
+                                    </Badge>
+                                  </Label>
+                                  <Input id="emergencyName" value={foundPatient.emergencyContact.name} readOnly />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="emergencyPhone" className="flex items-center gap-2">
+                                    Contact Phone
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                    >
+                                      From Palm
+                                    </Badge>
+                                  </Label>
+                                  <Input id="emergencyPhone" value={foundPatient.emergencyContact.phone} readOnly />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <h4 className="text-md font-semibold text-gray-900 mb-4">Medical Information</h4>
+                              <div className="space-y-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="allergies" className="flex items-center gap-2">
+                                    Allergies
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                    >
+                                      From Palm
+                                    </Badge>
+                                  </Label>
+                                  <Input id="allergies" value={foundPatient.medicalInfo.allergies} readOnly />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="medicalHistory" className="flex items-center gap-2">
+                                    Medical History
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs bg-blue-50 text-blue-700 border-blue-200"
+                                    >
+                                      From Palm
+                                    </Badge>
+                                  </Label>
+                                  <Input id="medicalHistory" value={foundPatient.medicalInfo.history} readOnly />
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
 
                         <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 pt-6">
                           <Button variant="outline" className="hover:bg-gray-50">
@@ -650,7 +530,7 @@ export default function PatientRegistration() {
                           </p>
                         </div>
 
-                        {foundPatient && palmScanState === "idle" && (
+                        {foundPatient && (
                           <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -726,8 +606,11 @@ export default function PatientRegistration() {
                                   </div>
                                 </div>
                                 <div className="flex justify-end mt-6">
-                                  <Button className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white">
-                                    Update Palm Record
+                                  <Button
+                                    onClick={() => setActiveTab("new")}
+                                    className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+                                  >
+                                    View Complete Record
                                   </Button>
                                 </div>
                               </CardContent>
@@ -745,9 +628,215 @@ export default function PatientRegistration() {
       </main>
 
       {/* Palm Scan Modal */}
-      <PalmScanModal />
+      <AnimatePresence>
+        {showPalmScanModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl"
+            >
+              <AnimatePresence mode="wait">
+                {scanStage === "initial" && (
+                  <motion.div
+                    key="initial"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center space-y-6"
+                  >
+                    <motion.div
+                      className="mx-auto w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center"
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+                    >
+                      <Hand className="w-12 h-12 text-blue-500" />
+                    </motion.div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">Place Palm on Scanner</h3>
+                      <p className="text-gray-600">Position your palm on the scanner to retrieve information</p>
+                    </div>
+                    <div className="flex justify-center space-x-4">
+                      <Button variant="outline" onClick={() => setShowPalmScanModal(false)} className="px-8">
+                        Cancel
+                      </Button>
+                      <Button
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-8"
+                        onClick={() => setScanStage("scanning")}
+                      >
+                        Start Scan
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {scanStage === "scanning" && (
+                  <motion.div
+                    key="scanning"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center space-y-6"
+                  >
+                    <motion.div className="relative mx-auto w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center">
+                      <Hand className="w-12 h-12 text-blue-500" />
+
+                      {/* Scanning effect */}
+                      <motion.div
+                        className="absolute inset-0 w-full bg-blue-200/30"
+                        initial={{ height: "0%", top: "100%" }}
+                        animate={{
+                          height: ["0%", "100%", "0%"],
+                          top: ["100%", "0%", "0%"],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: "linear",
+                        }}
+                      />
+                    </motion.div>
+
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">Scanning Palm...</h3>
+                      <p className="text-gray-600 mb-4">Please keep your hand steady on the scanner</p>
+
+                      {/* Progress bar */}
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <motion.div className="bg-blue-500 h-2 rounded-full" style={{ width: `${scanProgress}%` }} />
+                      </div>
+                      <p className="text-sm text-gray-500">{Math.round(scanProgress)}% Complete</p>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowPalmScanModal(false)
+                        setScanStage("initial")
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </motion.div>
+                )}
+
+                {scanStage === "complete" && (
+                  <motion.div
+                    key="complete"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center space-y-6"
+                  >
+                    <motion.div
+                      className="mx-auto w-24 h-24 bg-green-50 rounded-full flex items-center justify-center"
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                    >
+                      <CheckCircle className="w-12 h-12 text-green-500" />
+                    </motion.div>
+
+                    <div>
+                      <h3 className="text-xl font-bold text-green-800 mb-2">Patient Found!</h3>
+                      <p className="text-gray-600">Palm scan successful. Patient data retrieved.</p>
+
+                      <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+                        <p className="font-medium text-green-800">PalmCareConnect ID: {foundPatient?.id}</p>
+                        <p className="text-green-700">
+                          {foundPatient?.firstName} {foundPatient?.lastName}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleContinueAfterScan}
+                      className="bg-green-500 hover:bg-green-600 text-white w-full"
+                    >
+                      Continue
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Update Palm Modal */}
-      <UpdatePalmModal />
+      <AnimatePresence>
+        {showUpdateModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Update Palm Scan Record</h3>
+                <Button variant="ghost" size="sm" onClick={() => setShowUpdateModal(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="text-center space-y-6">
+                <motion.div
+                  className="mx-auto w-16 h-16 flex items-center justify-center bg-blue-100 rounded-full"
+                  animate={{
+                    scale: [1, 1.1, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <Hand className="w-8 h-8 text-blue-600" />
+                </motion.div>
+
+                <div>
+                  <p className="text-gray-600 mb-4">
+                    Update the patient's biometric profile in the PalmCareConnect system
+                  </p>
+                  <p className="text-sm text-gray-800 font-medium">
+                    This will update {foundPatient?.firstName} {foundPatient?.lastName}'s palm scan record with their
+                    latest information.
+                  </p>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                  <h4 className="font-medium text-blue-900 mb-2">Why update palm records?</h4>
+                  <p className="text-sm text-blue-700">
+                    Keeping biometric records current ensures faster check-ins for future visits and more accurate
+                    patient identification.
+                  </p>
+                </div>
+
+                <div className="flex space-x-4">
+                  <Button variant="outline" onClick={() => setShowUpdateModal(false)} className="flex-1">
+                    Cancel
+                  </Button>
+                  <Button onClick={processUpdatePalmRecord} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                    Update Palm Record
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -1,97 +1,236 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Progress } from "@/components/ui/progress"
-import {
-  FlaskConical,
-  TestTube,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  Search,
-  Download,
-  Upload,
-  Microscope,
-  Activity,
-  FileText,
-} from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Search, FlaskConical, FileText, CheckCircle, AlertTriangle, BarChart, Menu, Upload } from "lucide-react"
 import Sidebar from "@/components/sidebar"
+import { PageTransition } from "@/components/page-transition"
+import { useAppContext } from "@/components/app-context"
+import { NotificationPanel } from "@/components/notification-panel"
 
 const labQueue = [
   {
+    id: "P-1234",
+    name: "John Doe",
+    age: 45,
+    gender: "Male",
+    waitTime: 14,
+    priority: "high",
+    status: "waiting",
+    tests: [
+      { name: "Complete Blood Count", status: "pending" },
+      { name: "Basic Metabolic Panel", status: "pending" },
+      { name: "Chest X-Ray", status: "pending" },
+    ],
+  },
+  {
+    id: "P-1235",
+    name: "Jane Smith",
+    age: 32,
+    gender: "Female",
+    waitTime: 22,
+    priority: "medium",
+    status: "in-progress",
+    tests: [
+      { name: "Urinalysis", status: "completed" },
+      { name: "Thyroid Function Tests", status: "in-progress" },
+    ],
+  },
+  {
     id: "P-1236",
     name: "Bob Johnson",
-    testType: "Blood Work",
-    tests: ["CBC", "Basic Metabolic Panel", "Lipid Panel"],
-    priority: "routine",
-    orderTime: "10:30 AM",
-    estimatedTime: "45 min",
-    status: "pending",
-  },
-  {
-    id: "P-1241",
-    name: "Emma Taylor",
-    testType: "Urinalysis",
-    tests: ["Urinalysis", "Urine Culture"],
-    priority: "urgent",
-    orderTime: "11:15 AM",
-    estimatedTime: "30 min",
-    status: "in-progress",
-  },
-  {
-    id: "P-1242",
-    name: "David Wilson",
-    testType: "Imaging",
-    tests: ["Chest X-Ray", "ECG"],
-    priority: "stat",
-    orderTime: "11:45 AM",
-    estimatedTime: "20 min",
-    status: "pending",
+    age: 58,
+    gender: "Male",
+    waitTime: 9,
+    priority: "low",
+    status: "waiting",
+    tests: [
+      { name: "Lipid Panel", status: "pending" },
+      { name: "HbA1c", status: "pending" },
+    ],
   },
 ]
 
-const completedTests = [
-  {
-    id: "P-1230",
-    name: "Sarah Connor",
-    testType: "Blood Work",
-    tests: ["CBC", "Thyroid Panel"],
-    completedTime: "09:45 AM",
-    status: "completed",
-    results: "Normal ranges",
+const testResults = {
+  "Complete Blood Count": {
+    fields: [
+      { name: "WBC", value: "", unit: "10³/µL", reference: "4.5-11.0" },
+      { name: "RBC", value: "", unit: "10⁶/µL", reference: "4.5-5.9" },
+      { name: "Hemoglobin", value: "", unit: "g/dL", reference: "13.5-17.5" },
+      { name: "Hematocrit", value: "", unit: "%", reference: "41-53" },
+      { name: "Platelets", value: "", unit: "10³/µL", reference: "150-450" },
+    ],
   },
-  {
-    id: "P-1231",
-    name: "John Smith",
-    testType: "Urinalysis",
-    tests: ["Urinalysis"],
-    completedTime: "10:15 AM",
-    status: "completed",
-    results: "Abnormal - Follow up required",
+  "Basic Metabolic Panel": {
+    fields: [
+      { name: "Sodium", value: "", unit: "mmol/L", reference: "135-145" },
+      { name: "Potassium", value: "", unit: "mmol/L", reference: "3.5-5.0" },
+      { name: "Chloride", value: "", unit: "mmol/L", reference: "98-107" },
+      { name: "CO2", value: "", unit: "mmol/L", reference: "22-29" },
+      { name: "Glucose", value: "", unit: "mg/dL", reference: "70-99" },
+      { name: "BUN", value: "", unit: "mg/dL", reference: "7-20" },
+      { name: "Creatinine", value: "", unit: "mg/dL", reference: "0.6-1.2" },
+    ],
   },
-]
+  "Lipid Panel": {
+    fields: [
+      { name: "Total Cholesterol", value: "", unit: "mg/dL", reference: "<200" },
+      { name: "Triglycerides", value: "", unit: "mg/dL", reference: "<150" },
+      { name: "HDL", value: "", unit: "mg/dL", reference: ">40" },
+      { name: "LDL", value: "", unit: "mg/dL", reference: "<100" },
+    ],
+  },
+  Urinalysis: {
+    fields: [
+      { name: "Color", value: "", unit: "", reference: "Yellow" },
+      { name: "Clarity", value: "", unit: "", reference: "Clear" },
+      { name: "pH", value: "", unit: "", reference: "4.5-8.0" },
+      { name: "Protein", value: "", unit: "", reference: "Negative" },
+      { name: "Glucose", value: "", unit: "", reference: "Negative" },
+      { name: "Ketones", value: "", unit: "", reference: "Negative" },
+      { name: "Blood", value: "", unit: "", reference: "Negative" },
+    ],
+  },
+  "Thyroid Function Tests": {
+    fields: [
+      { name: "TSH", value: "", unit: "mIU/L", reference: "0.4-4.0" },
+      { name: "Free T4", value: "", unit: "ng/dL", reference: "0.8-1.8" },
+      { name: "Free T3", value: "", unit: "pg/mL", reference: "2.3-4.2" },
+    ],
+  },
+  HbA1c: {
+    fields: [{ name: "HbA1c", value: "", unit: "%", reference: "<5.7" }],
+  },
+  "Chest X-Ray": {
+    fields: [
+      { name: "Findings", value: "", unit: "", reference: "Normal" },
+      { name: "Impression", value: "", unit: "", reference: "Normal" },
+    ],
+  },
+}
 
 export default function Laboratory() {
   const [activeTab, setActiveTab] = useState("queue")
+  const [selectedPatient, setSelectedPatient] = useState(null)
   const [selectedTest, setSelectedTest] = useState(null)
-  const [testResults, setTestResults] = useState("")
-  const [technician, setTechnician] = useState("")
+  const [testData, setTestData] = useState([])
+  const [notes, setNotes] = useState("")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { simulateAction, activePatient } = useAppContext()
+
+  // Check if there's an active patient from context
+  useEffect(() => {
+    if (activePatient) {
+      const patient = labQueue.find((p) => p.id === activePatient.id)
+      if (patient) {
+        handlePatientSelect(patient)
+      }
+    }
+  }, [activePatient])
+
+  const handlePatientSelect = (patient) => {
+    simulateAction(`Loading ${patient.name}'s lab orders`, 800).then(() => {
+      setSelectedPatient(patient)
+      setSelectedTest(null)
+      setActiveTab("tests")
+    })
+  }
+
+  const handleTestSelect = (test) => {
+    simulateAction(`Preparing ${test.name} test form`, 600).then(() => {
+      setSelectedTest(test)
+
+      // Pre-populate with random data for demo purposes
+      if (testResults[test.name]) {
+        const fields = testResults[test.name].fields.map((field) => {
+          // Generate random values within reference range
+          let value = ""
+          if (field.reference.includes("-")) {
+            const [min, max] = field.reference.split("-").map(Number.parseFloat)
+            value = (Math.random() * (max - min) + min).toFixed(1)
+          } else if (field.reference.includes("<")) {
+            const max = Number.parseFloat(field.reference.replace("<", ""))
+            value = (Math.random() * max * 0.8).toFixed(1)
+          } else if (field.reference.includes(">")) {
+            const min = Number.parseFloat(field.reference.replace(">", ""))
+            value = (min + Math.random() * min * 0.5).toFixed(1)
+          } else if (["Negative", "Positive", "Normal", "Abnormal", "Clear", "Yellow"].includes(field.reference)) {
+            value = field.reference
+          }
+
+          return { ...field, value }
+        })
+
+        setTestData(fields)
+      } else {
+        setTestData([])
+      }
+
+      setNotes("")
+    })
+  }
+
+  const handleCompleteTest = () => {
+    simulateAction("Saving test results", 1000).then(() => {
+      // Update the test status
+      if (selectedPatient && selectedTest) {
+        const updatedPatient = {
+          ...selectedPatient,
+          tests: selectedPatient.tests.map((t) => (t.name === selectedTest.name ? { ...t, status: "completed" } : t)),
+        }
+
+        setSelectedPatient(updatedPatient)
+        setSelectedTest(null)
+      }
+    })
+  }
+
+  const handleGenerateRandomResults = () => {
+    if (selectedTest && testResults[selectedTest.name]) {
+      const fields = testResults[selectedTest.name].fields.map((field) => {
+        // Generate random values within reference range
+        let value = ""
+        if (field.reference.includes("-")) {
+          const [min, max] = field.reference.split("-").map(Number.parseFloat)
+          value = (Math.random() * (max - min) + min).toFixed(1)
+        } else if (field.reference.includes("<")) {
+          const max = Number.parseFloat(field.reference.replace("<", ""))
+          value = (Math.random() * max * 0.8).toFixed(1)
+        } else if (field.reference.includes(">")) {
+          const min = Number.parseFloat(field.reference.replace(">", ""))
+          value = (min + Math.random() * min * 0.5).toFixed(1)
+        } else if (["Negative", "Positive", "Normal", "Abnormal", "Clear", "Yellow"].includes(field.reference)) {
+          value = field.reference
+        }
+
+        return { ...field, value }
+      })
+
+      setTestData(fields)
+    }
+  }
+
+  const filteredPatients = labQueue.filter(
+    (patient) =>
+      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.id.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case "stat":
+      case "high":
         return "bg-red-100 text-red-800 border-red-200"
-      case "urgent":
-        return "bg-orange-100 text-orange-800 border-orange-200"
-      case "routine":
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "low":
         return "bg-green-100 text-green-800 border-green-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
@@ -105,470 +244,383 @@ export default function Laboratory() {
       case "completed":
         return "bg-green-100 text-green-800 border-green-200"
       case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "waiting":
+        return "bg-gray-100 text-gray-800 border-gray-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
     }
   }
 
-  const handleTestSelect = (test) => {
-    setSelectedTest(test)
-    setActiveTab("processing")
+  const isFieldOutOfRange = (field) => {
+    if (!field.value || !field.reference) return false
+
+    if (field.reference.includes("-")) {
+      const [min, max] = field.reference.split("-").map(Number.parseFloat)
+      const value = Number.parseFloat(field.value)
+      return value < min || value > max
+    } else if (field.reference.includes("<")) {
+      const max = Number.parseFloat(field.reference.replace("<", ""))
+      const value = Number.parseFloat(field.value)
+      return value >= max
+    } else if (field.reference.includes(">")) {
+      const min = Number.parseFloat(field.reference.replace(">", ""))
+      const value = Number.parseFloat(field.value)
+      return value <= min
+    }
+
+    return false
   }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 ml-64 min-h-screen overflow-y-auto">
-        <div className="p-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Laboratory</h1>
-                <p className="text-gray-600">Manage laboratory tests and results</p>
+      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <main className="flex-1 lg:ml-64 min-h-screen overflow-y-auto">
+        <PageTransition>
+          <div className="p-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Laboratory</h1>
+                  <p className="text-gray-600">Process lab tests and manage test results</p>
+                </div>
+
+                <div className="flex items-center gap-4 w-full lg:w-auto">
+                  <Button variant="outline" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                  <div className="relative flex-1 lg:flex-none">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                    <Input
+                      placeholder="Search patients..."
+                      className="pl-8 w-full lg:w-[250px]"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <NotificationPanel />
+                </div>
               </div>
-              <div className="flex gap-3">
-                <Button variant="outline" className="hover:bg-gray-50">
-                  <Search className="h-4 w-4 mr-2" />
-                  Search Tests
-                </Button>
-                <Button className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white">
-                  <TestTube className="h-4 w-4 mr-2" />
-                  New Test Order
-                </Button>
-              </div>
-            </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-              >
-                <Card className="hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Pending Tests</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">
-                          {labQueue.filter((test) => test.status === "pending").length}
-                        </p>
-                      </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600">
-                        <Clock className="h-6 w-6 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-3 mb-8">
+                  <TabsTrigger
+                    value="queue"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
+                  >
+                    Lab Queue
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="tests"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
+                  >
+                    Test Results
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="reports"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
+                  >
+                    Reports
+                  </TabsTrigger>
+                </TabsList>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-              >
-                <Card className="hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">In Progress</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">
-                          {labQueue.filter((test) => test.status === "in-progress").length}
-                        </p>
-                      </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600">
-                        <Activity className="h-6 w-6 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-              >
-                <Card className="hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Completed Today</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">{completedTests.length}</p>
-                      </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-green-500 to-green-600">
-                        <CheckCircle className="h-6 w-6 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-              >
-                <Card className="hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">STAT Orders</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">
-                          {labQueue.filter((test) => test.priority === "stat").length}
-                        </p>
-                      </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-red-500 to-red-600">
-                        <AlertTriangle className="h-6 w-6 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4 mb-8">
-                <TabsTrigger
-                  value="queue"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
-                >
-                  Test Queue
-                </TabsTrigger>
-                <TabsTrigger
-                  value="processing"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
-                >
-                  Processing
-                </TabsTrigger>
-                <TabsTrigger
-                  value="results"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
-                >
-                  Results
-                </TabsTrigger>
-                <TabsTrigger
-                  value="reports"
-                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
-                >
-                  Reports
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Test Queue */}
-              <TabsContent value="queue">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FlaskConical className="h-5 w-5 text-[#581c87]" />
-                        Laboratory Test Queue
-                      </CardTitle>
-                      <p className="text-sm text-gray-600">Click on a test to begin processing</p>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {labQueue.map((test, index) => (
-                          <motion.div
-                            key={test.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1, duration: 0.4 }}
-                            className="p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer"
-                            onClick={() => handleTestSelect(test)}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-start gap-4">
-                                <div className="w-16 h-16 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                  {test.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <h3 className="text-lg font-semibold text-gray-900">{test.name}</h3>
-                                    <Badge className={getPriorityColor(test.priority)}>{test.priority}</Badge>
-                                    <Badge className={getStatusColor(test.status)}>{test.status}</Badge>
+                {/* Lab Queue */}
+                <TabsContent value="queue">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Card>
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-2">
+                            <FlaskConical className="h-5 w-5 text-[#581c87]" />
+                            Patients Waiting for Lab Tests
+                          </CardTitle>
+                          <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                            {filteredPatients.length} patients
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {filteredPatients.map((patient, index) => (
+                            <motion.div
+                              key={patient.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1, duration: 0.4 }}
+                              className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer"
+                              onClick={() => handlePatientSelect(patient)}
+                            >
+                              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-semibold">
+                                    {patient.name
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")}
                                   </div>
-                                  <div className="grid grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
-                                    <p>ID: {test.id}</p>
-                                    <p>Ordered: {test.orderTime}</p>
-                                    <p>Est. Time: {test.estimatedTime}</p>
-                                  </div>
-                                  <div className="mb-3">
-                                    <p className="text-sm font-medium text-gray-700 mb-1">Test Type: {test.testType}</p>
-                                    <div className="flex flex-wrap gap-2">
-                                      {test.tests.map((testName, idx) => (
-                                        <Badge key={idx} variant="outline" className="text-xs">
-                                          {testName}
+                                  <div>
+                                    <h3 className="font-semibold text-gray-900">{patient.name}</h3>
+                                    <div className="flex flex-wrap gap-2 mt-1">
+                                      <p className="text-sm text-gray-600">ID: {patient.id}</p>
+                                      <p className="text-sm text-gray-600">
+                                        {patient.age} yrs, {patient.gender}
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                      {patient.tests.map((test, idx) => (
+                                        <Badge key={idx} className={getStatusColor(test.status)} variant="outline">
+                                          {test.name}
                                         </Badge>
                                       ))}
                                     </div>
                                   </div>
-                                  {test.status === "in-progress" && (
-                                    <div className="mt-3">
-                                      <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                        <span>Progress</span>
-                                        <span>65%</span>
-                                      </div>
-                                      <Progress value={65} className="h-2" />
-                                    </div>
-                                  )}
                                 </div>
-                              </div>
-                              <Button className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white">
-                                {test.status === "pending" ? "Start Processing" : "Continue"}
-                              </Button>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </TabsContent>
-
-              {/* Processing */}
-              <TabsContent value="processing">
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {selectedTest ? (
-                    <div className="space-y-6">
-                      {/* Test Header */}
-                      <Card className="bg-gradient-to-r from-[#581c87]/5 to-[#312e81]/5 border-[#581c87]/20">
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className="w-20 h-20 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-2xl">
-                                {selectedTest.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </div>
-                              <div>
-                                <h2 className="text-2xl font-bold text-gray-900">{selectedTest.name}</h2>
-                                <p className="text-gray-600">Patient ID: {selectedTest.id}</p>
-                                <p className="text-sm text-gray-500">Test Type: {selectedTest.testType}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <Badge className={getPriorityColor(selectedTest.priority)}>
-                                {selectedTest.priority} priority
-                              </Badge>
-                              <p className="text-sm text-gray-600 mt-2">
-                                <Clock className="h-4 w-4 inline mr-1" />
-                                Ordered: {selectedTest.orderTime}
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Test Details */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <TestTube className="h-5 w-5 text-[#581c87]" />
-                              Test Details
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Ordered Tests</Label>
-                              <div className="mt-2 space-y-2">
-                                {selectedTest.tests.map((test, idx) => (
-                                  <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                    <span className="text-sm">{test}</span>
-                                    <Badge variant="outline" className="text-xs">
-                                      {idx === 0 ? "In Progress" : "Pending"}
-                                    </Badge>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <div>
-                              <Label htmlFor="technician">Assigned Technician</Label>
-                              <Select value={technician} onValueChange={setTechnician}>
-                                <SelectTrigger className="mt-1">
-                                  <SelectValue placeholder="Select technician" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="tech1">Sarah Johnson, MLT</SelectItem>
-                                  <SelectItem value="tech2">Mike Chen, MT</SelectItem>
-                                  <SelectItem value="tech3">Lisa Rodriguez, MLT</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label className="text-sm font-medium text-gray-700">Processing Status</Label>
-                              <div className="mt-2">
-                                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                  <span>Overall Progress</span>
-                                  <span>65%</span>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Badge className={getPriorityColor(patient.priority)}>
+                                    {patient.priority} priority
+                                  </Badge>
+                                  <Badge className={getStatusColor(patient.status)}>{patient.status}</Badge>
                                 </div>
-                                <Progress value={65} className="h-3" />
-                                <p className="text-xs text-gray-500 mt-1">Estimated completion: 15 minutes</p>
+                                <Button
+                                  className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handlePatientSelect(patient)
+                                  }}
+                                >
+                                  <FlaskConical className="h-4 w-4 mr-2" />
+                                  Process Tests
+                                </Button>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Results Entry */}
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                              <Microscope className="h-5 w-5 text-[#581c87]" />
-                              Results Entry
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="results">Test Results</Label>
-                              <Textarea
-                                id="results"
-                                placeholder="Enter test results, observations, and measurements..."
-                                value={testResults}
-                                onChange={(e) => setTestResults(e.target.value)}
-                                rows={6}
-                                className="resize-none"
-                              />
-                            </div>
-
-                            <div className="flex gap-2">
-                              <Button variant="outline" className="flex-1">
-                                <Upload className="h-4 w-4 mr-2" />
-                                Upload Images
-                              </Button>
-                              <Button variant="outline" className="flex-1">
-                                <FileText className="h-4 w-4 mr-2" />
-                                Add Report
-                              </Button>
-                            </div>
-
-                            <div className="pt-4 space-y-3">
-                              <Button variant="outline" className="w-full">
-                                Save Progress
-                              </Button>
-                              <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white">
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Complete Test
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-12 text-center">
-                        <TestTube className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-600 mb-2">No Test Selected</h3>
-                        <p className="text-gray-500">Select a test from the queue to begin processing</p>
+                            </motion.div>
+                          ))}
+                        </div>
                       </CardContent>
                     </Card>
-                  )}
-                </motion.div>
-              </TabsContent>
+                  </motion.div>
+                </TabsContent>
 
-              {/* Results */}
-              <TabsContent value="results">
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                        Completed Test Results
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {completedTests.map((test, index) => (
-                          <motion.div
-                            key={test.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1, duration: 0.4 }}
-                            className="p-4 border rounded-lg hover:shadow-md transition-all duration-200"
-                          >
-                            <div className="flex items-center justify-between">
+                {/* Test Results */}
+                <TabsContent value="tests">
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {selectedPatient ? (
+                      <div className="space-y-6">
+                        {/* Patient Info Header */}
+                        <Card className="bg-gradient-to-r from-[#581c87]/5 to-[#312e81]/5 border-[#581c87]/20">
+                          <CardContent className="p-6">
+                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                               <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold">
-                                  {test.name
+                                <div className="w-16 h-16 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-xl">
+                                  {selectedPatient.name
                                     .split(" ")
                                     .map((n) => n[0])
                                     .join("")}
                                 </div>
                                 <div>
-                                  <h3 className="font-semibold text-gray-900">{test.name}</h3>
-                                  <p className="text-sm text-gray-600">ID: {test.id}</p>
-                                  <p className="text-sm text-gray-500">Completed: {test.completedTime}</p>
-                                  <p className="text-sm text-gray-700 mt-1">Results: {test.results}</p>
+                                  <h2 className="text-2xl font-bold text-gray-900">{selectedPatient.name}</h2>
+                                  <div className="flex flex-wrap gap-4 mt-1">
+                                    <p className="text-gray-600">ID: {selectedPatient.id}</p>
+                                    <p className="text-gray-600">
+                                      {selectedPatient.age} years, {selectedPatient.gender}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
-                              <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Download
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-                                >
-                                  View Details
-                                </Button>
-                              </div>
+                              <Badge className={getPriorityColor(selectedPatient.priority)}>
+                                {selectedPatient.priority} priority
+                              </Badge>
                             </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </TabsContent>
+                          </CardContent>
+                        </Card>
 
-              {/* Reports */}
-              <TabsContent value="reports">
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-[#581c87]" />
-                        Laboratory Reports
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-center py-12">
-                        <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-gray-600 mb-2">No Reports Available</h3>
-                        <p className="text-gray-500">Laboratory reports and analytics will appear here</p>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                          {/* Test List */}
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="flex items-center gap-2">
+                                <FileText className="h-5 w-5 text-[#581c87]" />
+                                Ordered Tests
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                {selectedPatient.tests.map((test, index) => (
+                                  <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
+                                      selectedTest?.name === test.name
+                                        ? "border-[#581c87] bg-purple-50"
+                                        : "hover:bg-gray-50"
+                                    }`}
+                                    onClick={() => handleTestSelect(test)}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="font-medium text-gray-900">{test.name}</h4>
+                                      <Badge className={getStatusColor(test.status)} variant="outline">
+                                        {test.status}
+                                      </Badge>
+                                    </div>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* Test Results Form */}
+                          <div className="lg:col-span-2">
+                            {selectedTest ? (
+                              <Card>
+                                <CardHeader>
+                                  <div className="flex items-center justify-between">
+                                    <CardTitle className="flex items-center gap-2">
+                                      <BarChart className="h-5 w-5 text-[#581c87]" />
+                                      {selectedTest.name} Results
+                                    </CardTitle>
+                                    <div className="flex gap-2">
+                                      <Button variant="outline" size="sm" onClick={handleGenerateRandomResults}>
+                                        Generate Sample Data
+                                      </Button>
+                                      <Button variant="outline" size="sm">
+                                        <Upload className="h-4 w-4 mr-2" />
+                                        Import
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {testData.map((field, index) => (
+                                      <div key={index} className="space-y-2">
+                                        <Label className="flex items-center justify-between">
+                                          <span>{field.name}</span>
+                                          {isFieldOutOfRange(field) && (
+                                            <AlertTriangle className="h-4 w-4 text-red-500" />
+                                          )}
+                                        </Label>
+                                        <div className="flex gap-2">
+                                          <Input
+                                            value={field.value}
+                                            onChange={(e) => {
+                                              const updatedData = [...testData]
+                                              updatedData[index].value = e.target.value
+                                              setTestData(updatedData)
+                                            }}
+                                            className={isFieldOutOfRange(field) ? "border-red-300 bg-red-50" : ""}
+                                          />
+                                          {field.unit && (
+                                            <div className="flex items-center px-3 bg-gray-100 border rounded-md text-sm text-gray-600">
+                                              {field.unit}
+                                            </div>
+                                          )}
+                                        </div>
+                                        <p className="text-xs text-gray-500">Reference: {field.reference}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label>Notes</Label>
+                                    <Textarea
+                                      placeholder="Enter any additional notes or observations..."
+                                      value={notes}
+                                      onChange={(e) => setNotes(e.target.value)}
+                                      rows={3}
+                                    />
+                                  </div>
+
+                                  <div className="flex justify-end gap-4">
+                                    <Button variant="outline" onClick={() => setSelectedTest(null)}>
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+                                      onClick={handleCompleteTest}
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                      Complete Test
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ) : (
+                              <Card>
+                                <CardContent className="p-8 text-center">
+                                  <FlaskConical className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Select a Test</h3>
+                                  <p className="text-gray-500">Choose a test from the list to enter results</p>
+                                </CardContent>
+                              </Card>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </TabsContent>
-            </Tabs>
-          </motion.div>
-        </div>
+                    ) : (
+                      <Card>
+                        <CardContent className="p-8 text-center">
+                          <FlaskConical className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                          <h3 className="text-xl font-semibold text-gray-700 mb-2">No Patient Selected</h3>
+                          <p className="text-gray-500 mb-6">
+                            Please select a patient from the queue to process lab tests
+                          </p>
+                          <Button onClick={() => setActiveTab("queue")}>View Queue</Button>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </motion.div>
+                </TabsContent>
+
+                {/* Reports */}
+                <TabsContent value="reports">
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <BarChart className="h-5 w-5 text-[#581c87]" />
+                          Lab Reports
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 text-gray-500">
+                          <BarChart className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                          <h3 className="text-lg font-medium mb-2">No reports available</h3>
+                          <p>Completed lab reports will appear here</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </TabsContent>
+              </Tabs>
+            </motion.div>
+          </div>
+        </PageTransition>
       </main>
     </div>
   )
