@@ -25,6 +25,7 @@ import {
   Menu,
 } from "lucide-react"
 import Sidebar from "@/components/sidebar"
+import MobileSidebar from "@/components/mobile-sidebar"
 import { PageTransition } from "@/components/page-transition"
 import { useAppContext } from "@/components/app-context"
 import { NotificationPanel } from "@/components/notification-panel"
@@ -132,7 +133,6 @@ export default function Consultation() {
   const [selectedLabTests, setSelectedLabTests] = useState([])
   const [customMedication, setCustomMedication] = useState("")
   const [customLabTest, setCustomLabTest] = useState("")
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const { simulateAction, activePatient } = useAppContext()
 
   // Check if there's an active patient from context
@@ -240,28 +240,20 @@ export default function Consultation() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <Sidebar />
+      <MobileSidebar />
 
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {/* Main Content Area */}
 
-      <main className="flex-1 lg:ml-64 min-h-screen overflow-y-auto">
+
+      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         <PageTransition>
           <div className="p-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
                 <div>
+                  <Stethoscope className="h-8 w-8 text-white" />
                   <h1 className="text-3xl font-bold text-gray-900">Consultation</h1>
                   <p className="text-gray-600">Examine patients, diagnose conditions, and prescribe treatments</p>
                 </div>

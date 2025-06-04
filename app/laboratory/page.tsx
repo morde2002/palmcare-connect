@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Search, FlaskConical, FileText, CheckCircle, AlertTriangle, BarChart, Menu, Upload } from "lucide-react"
 import Sidebar from "@/components/sidebar"
+import MobileSidebar from "@/components/mobile-sidebar"
 import { PageTransition } from "@/components/page-transition"
 import { useAppContext } from "@/components/app-context"
 import { NotificationPanel } from "@/components/notification-panel"
@@ -123,7 +124,6 @@ export default function Laboratory() {
   const [testData, setTestData] = useState([])
   const [notes, setNotes] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const { simulateAction, activePatient } = useAppContext()
 
   // Check if there's an active patient from context
@@ -273,20 +273,10 @@ export default function Laboratory() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <Sidebar />
+      <MobileSidebar />
 
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {/* Main content area */}
 
       <main className="flex-1 lg:ml-64 min-h-screen overflow-y-auto">
         <PageTransition>

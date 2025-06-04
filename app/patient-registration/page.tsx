@@ -11,12 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { UserPlus, Search, Hand, Phone, Calendar, User, Mail, MapPin, CheckCircle, Menu, X } from "lucide-react"
 import Sidebar from "@/components/sidebar"
+import MobileSidebar from "@/components/mobile-sidebar"
 
 export default function PatientRegistration() {
   const [activeTab, setActiveTab] = useState("new")
   const [searchQuery, setSearchQuery] = useState("")
   const [foundPatient, setFoundPatient] = useState(null)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showPalmScanModal, setShowPalmScanModal] = useState(false)
   const [scanStage, setScanStage] = useState("initial") // initial, scanning, complete
   const [scanProgress, setScanProgress] = useState(0)
@@ -124,31 +124,18 @@ export default function PatientRegistration() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <Sidebar />
+      <MobileSidebar />
 
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {/* Update Palm Record Modal */}
 
-      <main className="flex-1 lg:ml-64 min-h-screen overflow-y-auto">
+
+      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         <div className="p-4 lg:p-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="flex justify-between items-center mb-6 lg:mb-8">
               <div className="flex items-center gap-4">
-                {/* Mobile Menu Button */}
-                <Button variant="outline" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-                  <Menu className="h-5 w-5" />
-                </Button>
 
                 <div>
                   <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Patient Registration</h1>
