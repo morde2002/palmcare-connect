@@ -27,6 +27,8 @@ import {
   Timer,
   Zap,
 } from "lucide-react"
+import Sidebar from "@/components/sidebar"
+import MobileSidebar from "@/components/mobile-sidebar"
 
 export default function Triage() {
   const [activeTab, setActiveTab] = useState("queue")
@@ -193,6 +195,9 @@ export default function Triage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Include both sidebars */}
+      <Sidebar />
+      <MobileSidebar />
       {/* Main Content - Responsive padding for both mobile and desktop */}
       <div className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         {/* Header */}
