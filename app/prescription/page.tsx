@@ -41,6 +41,7 @@ import {
   RefreshCw,
 } from "lucide-react"
 import Sidebar from "@/components/sidebar"
+import MobileSidebar from "@/components/mobile-sidebar"
 import { useToast } from "@/components/ui/use-toast"
 
 const prescriptionQueue = [
@@ -148,6 +149,7 @@ export default function Prescription() {
   const [showAlertDialog, setShowAlertDialog] = useState(false)
   const [alertItem, setAlertItem] = useState(null)
   const [inventoryFilter, setInventoryFilter] = useState("all")
+  const [refreshing, setRefreshing] = useState(false)
 
   const [newMedication, setNewMedication] = useState({
     name: "",
@@ -193,6 +195,12 @@ export default function Prescription() {
       return () => clearTimeout(timer)
     }
   }, [activeTab])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setRefreshing(false)
+  }
 
   // Filter inventory based on search term and category filter
   const filteredInventory = inventory.filter((item) => {
@@ -404,45 +412,93 @@ export default function Prescription() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Sidebar />
-      <main className="flex-1 ml-64 min-h-screen overflow-y-auto">
+      <MobileSidebar />
+      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         <div className="p-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="flex justify-between items-center mb-8">
+            {/* Header with same design as Triage */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+            >
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Prescription Management</h1>
-                <p className="text-gray-600">Manage prescriptions and medication dispensing</p>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="hover:bg-gray-50 group transition-all duration-200"
-                  onClick={() => {
-                    setSearchTerm("")
-                    toast({
-                      title: "Search Activated",
-                      description: "Enter patient name or ID to search prescriptions",
-                    })
-                  }}
+                <motion.h1
+                  className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+                  animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
                 >
-                  <Search className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
-                  Search Prescriptions
-                </Button>
-                <Button
-                  className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group transition-all duration-200"
-                  onClick={() => {
-                    toast({
-                      title: "New Prescription",
-                      description: "Create a new prescription form",
-                    })
-                  }}
+                  <motion.div
+                    className="p-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg"
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    <Pill className="h-8 w-8 text-white" />
+                  </motion.div>
+                  Prescription Management
+                </motion.h1>
+                <motion.p
+                  className="text-gray-600"
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                 >
-                  <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-                  New Prescription
-                </Button>
+                  Manage prescriptions and medication dispensing
+                </motion.p>
               </div>
-            </div>
+
+              <div className="flex items-center gap-4 mt-4 lg:mt-0">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                  >
+                    <motion.div
+                      animate={refreshing ? { rotate: 360 } : {}}
+                      transition={{ duration: 1, repeat: refreshing ? Number.POSITIVE_INFINITY : 0 }}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    </motion.div>
+                    Refresh
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    className="bg-white/80 backdrop-blur-sm hover:bg-white group transition-all duration-200"
+                    onClick={() => {
+                      setSearchTerm("")
+                      toast({
+                        title: "Search Activated",
+                        description: "Enter patient name or ID to search prescriptions",
+                      })
+                    }}
+                  >
+                    <Search className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                    Search Prescriptions
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group transition-all duration-200"
+                    onClick={() => {
+                      toast({
+                        title: "New Prescription",
+                        description: "Create a new prescription form",
+                      })
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                    New Prescription
+                  </Button>
+                </motion.div>
+              </div>
+            </motion.div>
 
             {/* Stats Cards */}
             <motion.div
@@ -452,18 +508,26 @@ export default function Prescription() {
               animate="visible"
             >
               <motion.div variants={itemVariants}>
-                <Card className="hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">Pending</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">
+                        <motion.p
+                          className="text-3xl font-bold text-gray-900 mt-2"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        >
                           {prescriptions.filter((p) => p.status === "pending").length}
-                        </p>
+                        </motion.p>
                       </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 group-hover:scale-110 transition-transform duration-300">
+                      <motion.div
+                        className="p-3 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <Clock className="h-6 w-6 text-white" />
-                      </div>
+                      </motion.div>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-yellow-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                   </CardContent>
@@ -471,18 +535,26 @@ export default function Prescription() {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <Card className="hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">Ready</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">
+                        <motion.p
+                          className="text-3xl font-bold text-gray-900 mt-2"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        >
                           {prescriptions.filter((p) => p.status === "ready").length}
-                        </p>
+                        </motion.p>
                       </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 group-hover:scale-110 transition-transform duration-300">
+                      <motion.div
+                        className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <CheckCircle className="h-6 w-6 text-white" />
-                      </div>
+                      </motion.div>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-green-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                   </CardContent>
@@ -490,16 +562,26 @@ export default function Prescription() {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <Card className="hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">Dispensed Today</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">{completed.length}</p>
+                        <motion.p
+                          className="text-3xl font-bold text-gray-900 mt-2"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        >
+                          {completed.length}
+                        </motion.p>
                       </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 group-hover:scale-110 transition-transform duration-300">
+                      <motion.div
+                        className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <Pill className="h-6 w-6 text-white" />
-                      </div>
+                      </motion.div>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                   </CardContent>
@@ -508,7 +590,7 @@ export default function Prescription() {
 
               <motion.div variants={itemVariants}>
                 <Card
-                  className="hover:shadow-lg transition-shadow duration-300 overflow-hidden group cursor-pointer"
+                  className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer"
                   onClick={() => {
                     setActiveTab("inventory")
                     setInventoryFilter("low")
@@ -518,13 +600,21 @@ export default function Prescription() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">Alerts</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">
+                        <motion.p
+                          className="text-3xl font-bold text-gray-900 mt-2"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        >
                           {inventory.filter((item) => item.stock <= item.reorderLevel).length}
-                        </p>
+                        </motion.p>
                       </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-red-500 to-red-600 group-hover:scale-110 transition-transform duration-300">
+                      <motion.div
+                        className="p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <AlertTriangle className="h-6 w-6 text-white" />
-                      </div>
+                      </motion.div>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                   </CardContent>
@@ -583,7 +673,7 @@ export default function Prescription() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card>
+                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Pill className="h-5 w-5 text-[#581c87]" />
@@ -596,7 +686,7 @@ export default function Prescription() {
                             placeholder="Search prescriptions..."
                             value={searchTerm}
                             onChange={handleSearch}
-                            className="w-64 pl-8"
+                            className="w-64 pl-8 bg-white/80 backdrop-blur-sm"
                           />
                           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           {isSearching && (
@@ -643,7 +733,7 @@ export default function Prescription() {
                                 <motion.div
                                   key={prescription.id}
                                   variants={itemVariants}
-                                  className="p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group"
+                                  className="p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group bg-gray-50/80 hover:bg-gray-100/80"
                                   onClick={() => handlePrescriptionSelect(prescription)}
                                   whileHover={{ scale: 1.01 }}
                                   whileTap={{ scale: 0.99 }}
@@ -694,12 +784,14 @@ export default function Prescription() {
                                         </div>
                                       </div>
                                     </div>
-                                    <Button className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group-hover:scale-105 transition-transform duration-300">
-                                      <span className="flex items-center gap-2">
-                                        Process
-                                        <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-                                      </span>
-                                    </Button>
+                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                      <Button className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group-hover:scale-105 transition-transform duration-300">
+                                        <span className="flex items-center gap-2">
+                                          Process
+                                          <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                                        </span>
+                                      </Button>
+                                    </motion.div>
                                   </div>
                                 </motion.div>
                               ))}
@@ -766,7 +858,7 @@ export default function Prescription() {
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Current Medications */}
-                        <Card>
+                        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                               <Pill className="h-5 w-5 text-[#581c87]" />
@@ -778,7 +870,7 @@ export default function Prescription() {
                               {selectedPrescription.medications.map((med, idx) => (
                                 <motion.div
                                   key={`${med.name}-${idx}`}
-                                  className="p-4 border rounded-lg hover:shadow-sm transition-all duration-200 group"
+                                  className="p-4 border rounded-lg hover:shadow-sm transition-all duration-200 group bg-gray-50/80 hover:bg-gray-100/80"
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, height: 0, marginTop: 0 }}
@@ -838,7 +930,7 @@ export default function Prescription() {
                         </Card>
 
                         {/* Add Medication */}
-                        <Card>
+                        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                               <Info className="h-5 w-5 text-[#581c87]" />
@@ -908,7 +1000,7 @@ export default function Prescription() {
                       </div>
 
                       {/* Actions */}
-                      <Card>
+                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                         <CardContent className="p-6">
                           <div className="flex justify-end gap-3">
                             <Button variant="outline" className="group" onClick={handlePrintLabel}>
@@ -929,37 +1021,41 @@ export default function Prescription() {
                               Patient Instructions
                             </Button>
                             {selectedPrescription.status === "pending" && (
+                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Button
+                                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white group"
+                                  onClick={handleMarkAsReady}
+                                  disabled={isProcessing}
+                                >
+                                  {isProcessing ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <CheckCircle className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                                  )}
+                                  Mark as Ready
+                                </Button>
+                              </motion.div>
+                            )}
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                               <Button
-                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white group"
-                                onClick={handleMarkAsReady}
+                                className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group"
+                                onClick={handleDispense}
                                 disabled={isProcessing}
                               >
                                 {isProcessing ? (
                                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 ) : (
-                                  <CheckCircle className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                                  <Send className="h-4 w-4 mr-2 group-hover:translate-x-1 transition-transform duration-300" />
                                 )}
-                                Mark as Ready
+                                Dispense
                               </Button>
-                            )}
-                            <Button
-                              className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group"
-                              onClick={handleDispense}
-                              disabled={isProcessing}
-                            >
-                              {isProcessing ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              ) : (
-                                <Send className="h-4 w-4 mr-2 group-hover:translate-x-1 transition-transform duration-300" />
-                              )}
-                              Dispense
-                            </Button>
+                            </motion.div>
                           </div>
                         </CardContent>
                       </Card>
                     </div>
                   ) : (
-                    <Card>
+                    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                       <CardContent className="p-12 text-center">
                         <Pill className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-lg font-semibold text-gray-600 mb-2">No Prescription Selected</h3>
@@ -984,7 +1080,7 @@ export default function Prescription() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card>
+                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <CheckCircle className="h-5 w-5 text-green-500" />
@@ -997,7 +1093,7 @@ export default function Prescription() {
                             placeholder="Search dispensed..."
                             value={searchTerm}
                             onChange={handleSearch}
-                            className="w-64 pl-8"
+                            className="w-64 pl-8 bg-white/80 backdrop-blur-sm"
                           />
                           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           {isSearching && (
@@ -1043,7 +1139,7 @@ export default function Prescription() {
                                 <motion.div
                                   key={prescription.id}
                                   variants={itemVariants}
-                                  className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 group"
+                                  className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 group bg-green-50/80"
                                   whileHover={{ scale: 1.01 }}
                                 >
                                   <div className="flex items-center justify-between">
@@ -1071,7 +1167,7 @@ export default function Prescription() {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="group/btn"
+                                        className="group/btn bg-white/80 backdrop-blur-sm hover:bg-white"
                                         onClick={(e) => {
                                           e.stopPropagation()
                                           toast({
@@ -1118,7 +1214,7 @@ export default function Prescription() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card>
+                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-[#581c87]" />
@@ -1164,7 +1260,7 @@ export default function Prescription() {
                             placeholder="Search medications..."
                             value={searchTerm}
                             onChange={handleSearch}
-                            className="w-full sm:w-64 pl-8"
+                            className="w-full sm:w-64 pl-8 bg-white/80 backdrop-blur-sm"
                           />
                           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           {isSearching && (
@@ -1310,226 +1406,226 @@ export default function Prescription() {
             </Tabs>
           </motion.div>
         </div>
-      </main>
 
-      {/* Add Medication Dialog */}
-      <Dialog open={showMedicationDialog} onOpenChange={setShowMedicationDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5 text-[#581c87]" />
-              Add Medication
-            </DialogTitle>
-            <DialogDescription>Add a new medication to the prescription</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="medication-name">Medication Name</Label>
-              <Input
-                id="medication-name"
-                placeholder="Enter medication name"
-                value={newMedication.name}
-                onChange={(e) => setNewMedication({ ...newMedication, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dosage">Dosage</Label>
-              <Input
-                id="dosage"
-                placeholder="e.g., 500mg"
-                value={newMedication.dosage}
-                onChange={(e) => setNewMedication({ ...newMedication, dosage: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="frequency">Frequency</Label>
-              <Select
-                value={newMedication.frequency}
-                onValueChange={(value) => setNewMedication({ ...newMedication, frequency: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {frequencyOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration</Label>
-              <Input
-                id="duration"
-                placeholder="e.g., 30 days"
-                value={newMedication.duration}
-                onChange={(e) => setNewMedication({ ...newMedication, duration: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="instructions">Special Instructions (Optional)</Label>
-              <Textarea
-                id="instructions"
-                placeholder="Enter any special instructions"
-                value={newMedication.instructions}
-                onChange={(e) => setNewMedication({ ...newMedication, instructions: e.target.value })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowMedicationDialog(false)} disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddMedication}
-              disabled={isProcessing}
-              className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-            >
-              {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-              Add Medication
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Confirm Dispense Dialog */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-[#581c87]" />
-              Confirm Dispensing
-            </DialogTitle>
-            <DialogDescription>Are you sure you want to dispense this prescription?</DialogDescription>
-          </DialogHeader>
-          {selectedPrescription && (
-            <div className="py-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Prescription Details:</h4>
-                <p className="text-sm text-gray-600">Patient: {selectedPrescription.name}</p>
-                <p className="text-sm text-gray-600">ID: {selectedPrescription.id}</p>
-                <p className="text-sm text-gray-600">Medications: {selectedPrescription.medications.length} items</p>
+        {/* Add Medication Dialog */}
+        <Dialog open={showMedicationDialog} onOpenChange={setShowMedicationDialog}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-[#581c87]" />
+                Add Medication
+              </DialogTitle>
+              <DialogDescription>Add a new medication to the prescription</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="medication-name">Medication Name</Label>
+                <Input
+                  id="medication-name"
+                  placeholder="Enter medication name"
+                  value={newMedication.name}
+                  onChange={(e) => setNewMedication({ ...newMedication, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dosage">Dosage</Label>
+                <Input
+                  id="dosage"
+                  placeholder="e.g., 500mg"
+                  value={newMedication.dosage}
+                  onChange={(e) => setNewMedication({ ...newMedication, dosage: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="frequency">Frequency</Label>
+                <Select
+                  value={newMedication.frequency}
+                  onValueChange={(value) => setNewMedication({ ...newMedication, frequency: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {frequencyOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="duration">Duration</Label>
+                <Input
+                  id="duration"
+                  placeholder="e.g., 30 days"
+                  value={newMedication.duration}
+                  onChange={(e) => setNewMedication({ ...newMedication, duration: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="instructions">Special Instructions (Optional)</Label>
+                <Textarea
+                  id="instructions"
+                  placeholder="Enter any special instructions"
+                  value={newMedication.instructions}
+                  onChange={(e) => setNewMedication({ ...newMedication, instructions: e.target.value })}
+                />
               </div>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirmDialog(false)} disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button
-              onClick={confirmDispense}
-              disabled={isProcessing}
-              className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-            >
-              {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-              Confirm Dispense
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowMedicationDialog(false)} disabled={isProcessing}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddMedication}
+                disabled={isProcessing}
+                className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+              >
+                {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+                Add Medication
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* Print Dialog */}
-      <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Printer className="h-5 w-5 text-[#581c87]" />
-              Print Prescription Label
-            </DialogTitle>
-            <DialogDescription>Select what you would like to print</DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Button
-                className="w-full justify-start bg-gray-50 hover:bg-gray-100 text-gray-700"
-                onClick={() => {
-                  toast({
-                    title: "Printing Label",
-                    description: "Prescription label is being printed",
-                  })
-                  setShowPrintDialog(false)
-                }}
-              >
-                <Clipboard className="h-4 w-4 mr-2" />
-                Prescription Label
-              </Button>
-              <Button
-                className="w-full justify-start bg-gray-50 hover:bg-gray-100 text-gray-700"
-                onClick={() => {
-                  toast({
-                    title: "Printing Instructions",
-                    description: "Patient instructions are being printed",
-                  })
-                  setShowPrintDialog(false)
-                }}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Patient Instructions
-              </Button>
-              <Button
-                className="w-full justify-start bg-gray-50 hover:bg-gray-100 text-gray-700"
-                onClick={() => {
-                  toast({
-                    title: "Printing Receipt",
-                    description: "Dispensing receipt is being printed",
-                  })
-                  setShowPrintDialog(false)
-                }}
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                Dispensing Receipt
-              </Button>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPrintDialog(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Alert Dialog */}
-      <Dialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              Low Stock Alert
-            </DialogTitle>
-            <DialogDescription>This medication is running low and needs to be reordered</DialogDescription>
-          </DialogHeader>
-          {alertItem && (
-            <div className="py-4">
-              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                <h4 className="font-medium text-yellow-800 mb-2">
-                  {alertItem.name} {alertItem.strength}
-                </h4>
-                <div className="text-sm text-yellow-700 space-y-1">
-                  <p>Current Stock: {alertItem.stock}</p>
-                  <p>Reorder Level: {alertItem.reorderLevel}</p>
-                  <p>Category: {alertItem.category}</p>
+        {/* Confirm Dispense Dialog */}
+        <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Send className="h-5 w-5 text-[#581c87]" />
+                Confirm Dispensing
+              </DialogTitle>
+              <DialogDescription>Are you sure you want to dispense this prescription?</DialogDescription>
+            </DialogHeader>
+            {selectedPrescription && (
+              <div className="py-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Prescription Details:</h4>
+                  <p className="text-sm text-gray-600">Patient: {selectedPrescription.name}</p>
+                  <p className="text-sm text-gray-600">ID: {selectedPrescription.id}</p>
+                  <p className="text-sm text-gray-600">Medications: {selectedPrescription.medications.length} items</p>
                 </div>
               </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowConfirmDialog(false)} disabled={isProcessing}>
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDispense}
+                disabled={isProcessing}
+                className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+              >
+                {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
+                Confirm Dispense
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Print Dialog */}
+        <Dialog open={showPrintDialog} onOpenChange={setShowPrintDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Printer className="h-5 w-5 text-[#581c87]" />
+                Print Prescription Label
+              </DialogTitle>
+              <DialogDescription>Select what you would like to print</DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div className="space-y-2">
+                <Button
+                  className="w-full justify-start bg-gray-50 hover:bg-gray-100 text-gray-700"
+                  onClick={() => {
+                    toast({
+                      title: "Printing Label",
+                      description: "Prescription label is being printed",
+                    })
+                    setShowPrintDialog(false)
+                  }}
+                >
+                  <Clipboard className="h-4 w-4 mr-2" />
+                  Prescription Label
+                </Button>
+                <Button
+                  className="w-full justify-start bg-gray-50 hover:bg-gray-100 text-gray-700"
+                  onClick={() => {
+                    toast({
+                      title: "Printing Instructions",
+                      description: "Patient instructions are being printed",
+                    })
+                    setShowPrintDialog(false)
+                  }}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Patient Instructions
+                </Button>
+                <Button
+                  className="w-full justify-start bg-gray-50 hover:bg-gray-100 text-gray-700"
+                  onClick={() => {
+                    toast({
+                      title: "Printing Receipt",
+                      description: "Dispensing receipt is being printed",
+                    })
+                    setShowPrintDialog(false)
+                  }}
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Dispensing Receipt
+                </Button>
+              </div>
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAlertDialog(false)} disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button
-              onClick={reorderMedication}
-              disabled={isProcessing}
-              className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-            >
-              {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
-              Place Reorder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPrintDialog(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Alert Dialog */}
+        <Dialog open={showAlertDialog} onOpenChange={setShowAlertDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                Low Stock Alert
+              </DialogTitle>
+              <DialogDescription>This medication is running low and needs to be reordered</DialogDescription>
+            </DialogHeader>
+            {alertItem && (
+              <div className="py-4">
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <h4 className="font-medium text-yellow-800 mb-2">
+                    {alertItem.name} {alertItem.strength}
+                  </h4>
+                  <div className="text-sm text-yellow-700 space-y-1">
+                    <p>Current Stock: {alertItem.stock}</p>
+                    <p>Reorder Level: {alertItem.reorderLevel}</p>
+                    <p>Category: {alertItem.category}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowAlertDialog(false)} disabled={isProcessing}>
+                Cancel
+              </Button>
+              <Button
+                onClick={reorderMedication}
+                disabled={isProcessing}
+                className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+              >
+                {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+                Place Reorder
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </main>
     </div>
   )
 }

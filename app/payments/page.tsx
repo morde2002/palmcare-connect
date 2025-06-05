@@ -39,8 +39,10 @@ import {
   Download,
   Plus,
   Minus,
+  RefreshCw,
 } from "lucide-react"
 import Sidebar from "@/components/sidebar"
+import MobileSidebar from "@/components/mobile-sidebar"
 import { useToast } from "@/components/ui/use-toast"
 
 const pendingPayments = [
@@ -159,6 +161,7 @@ export default function Payments() {
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false)
   const [filterStatus, setFilterStatus] = useState("all")
   const [dateRange, setDateRange] = useState("all")
+  const [refreshing, setRefreshing] = useState(false)
 
   const [paymentForm, setPaymentForm] = useState({
     amount: "",
@@ -210,6 +213,12 @@ export default function Payments() {
       return () => clearTimeout(timer)
     }
   }, [activeTab])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setRefreshing(false)
+  }
 
   // Calculate statistics
   const totalPending = payments.reduce((sum, payment) => sum + payment.patientResponsibility, 0)
@@ -375,44 +384,92 @@ export default function Payments() {
   })
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Sidebar />
-      <main className="flex-1 ml-64 min-h-screen overflow-y-auto">
+      <MobileSidebar />
+      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         <div className="p-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="flex justify-between items-center mb-8">
+            {/* Header with same design as Triage */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+            >
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Payment Management</h1>
-                <p className="text-gray-600">Manage patient payments and billing</p>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="hover:bg-gray-50 group transition-all duration-200"
-                  onClick={() => {
-                    toast({
-                      title: "Generating Report",
-                      description: "Payment report is being generated",
-                    })
-                  }}
+                <motion.h1
+                  className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+                  animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
                 >
-                  <Download className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
-                  Export Report
-                </Button>
-                <Button
-                  className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group transition-all duration-200"
-                  onClick={() => {
-                    toast({
-                      title: "New Invoice",
-                      description: "Create a new patient invoice",
-                    })
-                  }}
+                  <motion.div
+                    className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 shadow-lg"
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    <DollarSign className="h-8 w-8 text-white" />
+                  </motion.div>
+                  Payment Management
+                </motion.h1>
+                <motion.p
+                  className="text-gray-600"
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                 >
-                  <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-                  New Invoice
-                </Button>
+                  Manage patient payments and billing
+                </motion.p>
               </div>
-            </div>
+
+              <div className="flex items-center gap-4 mt-4 lg:mt-0">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                  >
+                    <motion.div
+                      animate={refreshing ? { rotate: 360 } : {}}
+                      transition={{ duration: 1, repeat: refreshing ? Number.POSITIVE_INFINITY : 0 }}
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    </motion.div>
+                    Refresh
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="outline"
+                    className="bg-white/80 backdrop-blur-sm hover:bg-white group transition-all duration-200"
+                    onClick={() => {
+                      toast({
+                        title: "Generating Report",
+                        description: "Payment report is being generated",
+                      })
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                    Export Report
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group transition-all duration-200"
+                    onClick={() => {
+                      toast({
+                        title: "New Invoice",
+                        description: "Create a new patient invoice",
+                      })
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                    New Invoice
+                  </Button>
+                </motion.div>
+              </div>
+            </motion.div>
 
             {/* Stats Cards */}
             <motion.div
@@ -422,17 +479,27 @@ export default function Payments() {
               animate="visible"
             >
               <motion.div variants={itemVariants}>
-                <Card className="hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">Pending Payments</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">${totalPending.toFixed(2)}</p>
+                        <motion.p
+                          className="text-3xl font-bold text-gray-900 mt-2"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        >
+                          ${totalPending.toFixed(2)}
+                        </motion.p>
                         <p className="text-xs text-gray-500 mt-1">{payments.length} invoices</p>
                       </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-yellow-500 to-yellow-600 group-hover:scale-110 transition-transform duration-300">
+                      <motion.div
+                        className="p-3 rounded-xl bg-gradient-to-r from-yellow-500 to-yellow-600 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <Clock className="h-6 w-6 text-white" />
-                      </div>
+                      </motion.div>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-yellow-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                   </CardContent>
@@ -440,19 +507,29 @@ export default function Payments() {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <Card className="hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">Overdue</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">${totalOverdue.toFixed(2)}</p>
+                        <motion.p
+                          className="text-3xl font-bold text-gray-900 mt-2"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        >
+                          ${totalOverdue.toFixed(2)}
+                        </motion.p>
                         <p className="text-xs text-gray-500 mt-1">
                           {payments.filter((p) => p.status === "overdue").length} invoices
                         </p>
                       </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-red-500 to-red-600 group-hover:scale-110 transition-transform duration-300">
+                      <motion.div
+                        className="p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <AlertTriangle className="h-6 w-6 text-white" />
-                      </div>
+                      </motion.div>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                   </CardContent>
@@ -460,20 +537,30 @@ export default function Payments() {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <Card className="hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">Paid Today</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">${totalPaidToday.toFixed(2)}</p>
+                        <motion.p
+                          className="text-3xl font-bold text-gray-900 mt-2"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        >
+                          ${totalPaidToday.toFixed(2)}
+                        </motion.p>
                         <p className="text-xs text-gray-500 mt-1">
                           {completed.filter((p) => p.paymentDate === new Date().toISOString().split("T")[0]).length}{" "}
                           payments
                         </p>
                       </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 group-hover:scale-110 transition-transform duration-300">
+                      <motion.div
+                        className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <CheckCircle className="h-6 w-6 text-white" />
-                      </div>
+                      </motion.div>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-green-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                   </CardContent>
@@ -481,20 +568,30 @@ export default function Payments() {
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <Card className="hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <CardContent className="p-6 relative">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">${totalRevenue.toFixed(2)}</p>
+                        <motion.p
+                          className="text-3xl font-bold text-gray-900 mt-2"
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        >
+                          ${totalRevenue.toFixed(2)}
+                        </motion.p>
                         <p className="text-xs text-green-600 mt-1 flex items-center">
                           <TrendingUp className="h-3 w-3 mr-1" />
                           +12.5% from last month
                         </p>
                       </div>
-                      <div className="p-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 group-hover:scale-110 transition-transform duration-300">
+                      <motion.div
+                        className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        transition={{ duration: 0.3 }}
+                      >
                         <DollarSign className="h-6 w-6 text-white" />
-                      </div>
+                      </motion.div>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
                   </CardContent>
@@ -553,7 +650,7 @@ export default function Payments() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card>
+                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <DollarSign className="h-5 w-5 text-[#581c87]" />
@@ -599,7 +696,7 @@ export default function Payments() {
                             placeholder="Search payments..."
                             value={searchTerm}
                             onChange={handleSearch}
-                            className="w-full sm:w-64 pl-8"
+                            className="w-full sm:w-64 pl-8 bg-white/80 backdrop-blur-sm"
                           />
                           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           {isSearching && (
@@ -639,7 +736,7 @@ export default function Payments() {
                               <motion.div
                                 key={payment.id}
                                 variants={itemVariants}
-                                className="p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group"
+                                className="p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group bg-gray-50/80 hover:bg-gray-100/80"
                                 onClick={() => handlePaymentSelect(payment)}
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.99 }}
@@ -712,12 +809,14 @@ export default function Payments() {
                                       </p>
                                       <p className="text-sm text-gray-500">Amount Due</p>
                                     </div>
-                                    <Button className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group-hover:scale-105 transition-transform duration-300">
-                                      <span className="flex items-center gap-2">
-                                        Process Payment
-                                        <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-                                      </span>
-                                    </Button>
+                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                      <Button className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group-hover:scale-105 transition-transform duration-300">
+                                        <span className="flex items-center gap-2">
+                                          Process Payment
+                                          <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                                        </span>
+                                      </Button>
+                                    </motion.div>
                                   </div>
                                 </div>
                               </motion.div>
@@ -737,7 +836,7 @@ export default function Payments() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card>
+                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <CheckCircle className="h-5 w-5 text-green-500" />
@@ -750,7 +849,7 @@ export default function Payments() {
                             placeholder="Search completed..."
                             value={searchTerm}
                             onChange={handleSearch}
-                            className="w-64 pl-8"
+                            className="w-64 pl-8 bg-white/80 backdrop-blur-sm"
                           />
                           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           {isSearching && (
@@ -790,7 +889,7 @@ export default function Payments() {
                               <motion.div
                                 key={payment.id}
                                 variants={itemVariants}
-                                className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 group"
+                                className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 group bg-green-50/80"
                                 whileHover={{ scale: 1.01 }}
                               >
                                 <div className="flex items-center justify-between">
@@ -825,7 +924,7 @@ export default function Payments() {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="group/btn"
+                                        className="group/btn bg-white/80 backdrop-blur-sm hover:bg-white"
                                         onClick={(e) => {
                                           e.stopPropagation()
                                           setSelectedPayment(payment)
@@ -838,7 +937,7 @@ export default function Payments() {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        className="group/btn"
+                                        className="group/btn bg-white/80 backdrop-blur-sm hover:bg-white"
                                         onClick={(e) => {
                                           e.stopPropagation()
                                           setSelectedPayment(payment)
@@ -885,7 +984,7 @@ export default function Payments() {
                   transition={{ duration: 0.5 }}
                 >
                   {isLoading ? (
-                    <Card>
+                    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                       <CardContent className="flex flex-col items-center justify-center py-12">
                         <Loader2 className="h-12 w-12 text-[#581c87] animate-spin mb-4" />
                         <p className="text-lg font-medium text-gray-600">Loading analytics data...</p>
@@ -894,7 +993,7 @@ export default function Payments() {
                   ) : (
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <Card>
+                        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                               <TrendingUp className="h-5 w-5 text-[#581c87]" />
@@ -912,7 +1011,7 @@ export default function Payments() {
                           </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                               <Wallet className="h-5 w-5 text-[#581c87]" />
@@ -943,7 +1042,7 @@ export default function Payments() {
                         </Card>
                       </div>
 
-                      <Card>
+                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                         <CardHeader>
                           <CardTitle className="flex items-center gap-2">
                             <Calculator className="h-5 w-5 text-[#581c87]" />
@@ -999,7 +1098,7 @@ export default function Payments() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card>
+                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-[#581c87]" />
@@ -1043,7 +1142,7 @@ export default function Payments() {
                         ].map((report, index) => (
                           <motion.div
                             key={report.name}
-                            className="p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group"
+                            className="p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group bg-gray-50/80 hover:bg-gray-100/80"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => {
@@ -1079,239 +1178,239 @@ export default function Payments() {
             </Tabs>
           </motion.div>
         </div>
-      </main>
 
-      {/* Payment Processing Dialog */}
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-[#581c87]" />
-              Process Payment
-            </DialogTitle>
-            <DialogDescription>Process payment for {selectedPayment?.patientName}</DialogDescription>
-          </DialogHeader>
-          {selectedPayment && (
-            <div className="space-y-6 py-4">
-              {/* Payment Summary */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Payment Summary</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-600">Invoice ID:</p>
-                    <p className="font-medium">{selectedPayment.id}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Patient:</p>
-                    <p className="font-medium">{selectedPayment.patientName}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Total Amount:</p>
-                    <p className="font-medium">${selectedPayment.totalAmount.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Insurance Coverage:</p>
-                    <p className="font-medium">${selectedPayment.insuranceCoverage.toFixed(2)}</p>
-                  </div>
-                  <div className="col-span-2 pt-2 border-t">
-                    <p className="text-gray-600">Amount Due:</p>
-                    <p className="text-xl font-bold text-[#581c87]">
-                      ${selectedPayment.patientResponsibility.toFixed(2)}
-                    </p>
+        {/* Payment Processing Dialog */}
+        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-[#581c87]" />
+                Process Payment
+              </DialogTitle>
+              <DialogDescription>Process payment for {selectedPayment?.patientName}</DialogDescription>
+            </DialogHeader>
+            {selectedPayment && (
+              <div className="space-y-6 py-4">
+                {/* Payment Summary */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-3">Payment Summary</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-600">Invoice ID:</p>
+                      <p className="font-medium">{selectedPayment.id}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Patient:</p>
+                      <p className="font-medium">{selectedPayment.patientName}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Total Amount:</p>
+                      <p className="font-medium">${selectedPayment.totalAmount.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600">Insurance Coverage:</p>
+                      <p className="font-medium">${selectedPayment.insuranceCoverage.toFixed(2)}</p>
+                    </div>
+                    <div className="col-span-2 pt-2 border-t">
+                      <p className="text-gray-600">Amount Due:</p>
+                      <p className="text-xl font-bold text-[#581c87]">
+                        ${selectedPayment.patientResponsibility.toFixed(2)}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Payment Form */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                {/* Payment Form */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="payment-amount">Payment Amount</Label>
+                      <Input
+                        id="payment-amount"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={paymentForm.amount}
+                        onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="payment-method">Payment Method</Label>
+                      <Select
+                        value={paymentForm.method}
+                        onValueChange={(value) => setPaymentForm({ ...paymentForm, method: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {paymentMethods.map((method) => (
+                            <SelectItem key={method.value} value={method.value}>
+                              <div className="flex items-center gap-2">
+                                <method.icon className="h-4 w-4" />
+                                {method.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor="payment-amount">Payment Amount</Label>
+                    <Label htmlFor="reference">Reference Number (Optional)</Label>
                     <Input
-                      id="payment-amount"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={paymentForm.amount}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                      id="reference"
+                      placeholder="Transaction reference or check number"
+                      value={paymentForm.reference}
+                      onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="payment-method">Payment Method</Label>
-                    <Select
-                      value={paymentForm.method}
-                      onValueChange={(value) => setPaymentForm({ ...paymentForm, method: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {paymentMethods.map((method) => (
-                          <SelectItem key={method.value} value={method.value}>
-                            <div className="flex items-center gap-2">
-                              <method.icon className="h-4 w-4" />
-                              {method.label}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="notes">Notes (Optional)</Label>
+                    <Textarea
+                      id="notes"
+                      placeholder="Additional payment notes"
+                      value={paymentForm.notes}
+                      onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPaymentDialog(false)} disabled={isProcessing}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleProcessPayment}
+                disabled={isProcessing}
+                className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+              >
+                {isProcessing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4 mr-2" />
+                )}
+                Process Payment
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Receipt Dialog */}
+        <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Receipt className="h-5 w-5 text-[#581c87]" />
+                Payment Receipt
+              </DialogTitle>
+              <DialogDescription>Print or email payment receipt</DialogDescription>
+            </DialogHeader>
+            {selectedPayment && (
+              <div className="py-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Receipt Details</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Transaction ID:</span>
+                      <span className="font-medium">{selectedPayment.transactionId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Patient:</span>
+                      <span className="font-medium">{selectedPayment.patientName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Amount Paid:</span>
+                      <span className="font-medium">${selectedPayment.amountPaid?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Payment Method:</span>
+                      <span className="font-medium">{selectedPayment.paymentMethod}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Date:</span>
+                      <span className="font-medium">{selectedPayment.paymentDate}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowReceiptDialog(false)}>
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  toast({
+                    title: "Receipt Printed",
+                    description: "Payment receipt has been sent to the printer",
+                  })
+                  setShowReceiptDialog(false)
+                }}
+                className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Print Receipt
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Refund Dialog */}
+        <Dialog open={showRefundDialog} onOpenChange={setShowRefundDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Minus className="h-5 w-5 text-red-500" />
+                Process Refund
+              </DialogTitle>
+              <DialogDescription>Process a refund for {selectedPayment?.patientName}</DialogDescription>
+            </DialogHeader>
+            {selectedPayment && (
+              <div className="space-y-4 py-4">
+                <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+                  <h4 className="font-medium text-red-800 mb-2">Original Payment</h4>
+                  <div className="text-sm text-red-700 space-y-1">
+                    <p>Amount Paid: ${selectedPayment.amountPaid?.toFixed(2)}</p>
+                    <p>Payment Method: {selectedPayment.paymentMethod}</p>
+                    <p>Transaction ID: {selectedPayment.transactionId}</p>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reference">Reference Number (Optional)</Label>
+                  <Label htmlFor="refund-amount">Refund Amount</Label>
                   <Input
-                    id="reference"
-                    placeholder="Transaction reference or check number"
-                    value={paymentForm.reference}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, reference: e.target.value })}
+                    id="refund-amount"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={refundForm.amount}
+                    onChange={(e) => setRefundForm({ ...refundForm, amount: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="notes">Notes (Optional)</Label>
+                  <Label htmlFor="refund-reason">Reason for Refund</Label>
                   <Textarea
-                    id="notes"
-                    placeholder="Additional payment notes"
-                    value={paymentForm.notes}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                    id="refund-reason"
+                    placeholder="Enter reason for refund"
+                    value={refundForm.reason}
+                    onChange={(e) => setRefundForm({ ...refundForm, reason: e.target.value })}
                   />
                 </div>
               </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPaymentDialog(false)} disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleProcessPayment}
-              disabled={isProcessing}
-              className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-            >
-              {isProcessing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <CreditCard className="h-4 w-4 mr-2" />
-              )}
-              Process Payment
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Receipt Dialog */}
-      <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Receipt className="h-5 w-5 text-[#581c87]" />
-              Payment Receipt
-            </DialogTitle>
-            <DialogDescription>Print or email payment receipt</DialogDescription>
-          </DialogHeader>
-          {selectedPayment && (
-            <div className="py-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium mb-2">Receipt Details</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Transaction ID:</span>
-                    <span className="font-medium">{selectedPayment.transactionId}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Patient:</span>
-                    <span className="font-medium">{selectedPayment.patientName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Amount Paid:</span>
-                    <span className="font-medium">${selectedPayment.amountPaid?.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Payment Method:</span>
-                    <span className="font-medium">{selectedPayment.paymentMethod}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Date:</span>
-                    <span className="font-medium">{selectedPayment.paymentDate}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowReceiptDialog(false)}>
-              Close
-            </Button>
-            <Button
-              onClick={() => {
-                toast({
-                  title: "Receipt Printed",
-                  description: "Payment receipt has been sent to the printer",
-                })
-                setShowReceiptDialog(false)
-              }}
-              className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              Print Receipt
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Refund Dialog */}
-      <Dialog open={showRefundDialog} onOpenChange={setShowRefundDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Minus className="h-5 w-5 text-red-500" />
-              Process Refund
-            </DialogTitle>
-            <DialogDescription>Process a refund for {selectedPayment?.patientName}</DialogDescription>
-          </DialogHeader>
-          {selectedPayment && (
-            <div className="space-y-4 py-4">
-              <div className="bg-red-50 p-4 rounded-lg border border-red-100">
-                <h4 className="font-medium text-red-800 mb-2">Original Payment</h4>
-                <div className="text-sm text-red-700 space-y-1">
-                  <p>Amount Paid: ${selectedPayment.amountPaid?.toFixed(2)}</p>
-                  <p>Payment Method: {selectedPayment.paymentMethod}</p>
-                  <p>Transaction ID: {selectedPayment.transactionId}</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="refund-amount">Refund Amount</Label>
-                <Input
-                  id="refund-amount"
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={refundForm.amount}
-                  onChange={(e) => setRefundForm({ ...refundForm, amount: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="refund-reason">Reason for Refund</Label>
-                <Textarea
-                  id="refund-reason"
-                  placeholder="Enter reason for refund"
-                  value={refundForm.reason}
-                  onChange={(e) => setRefundForm({ ...refundForm, reason: e.target.value })}
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRefundDialog(false)} disabled={isProcessing}>
-              Cancel
-            </Button>
-            <Button onClick={handleRefund} disabled={isProcessing} className="bg-red-600 hover:bg-red-700 text-white">
-              {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Minus className="h-4 w-4 mr-2" />}
-              Process Refund
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowRefundDialog(false)} disabled={isProcessing}>
+                Cancel
+              </Button>
+              <Button onClick={handleRefund} disabled={isProcessing} className="bg-red-600 hover:bg-red-700 text-white">
+                {isProcessing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Minus className="h-4 w-4 mr-2" />}
+                Process Refund
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </main>
     </div>
   )
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Search, FlaskConical, FileText, CheckCircle, AlertTriangle, BarChart, Menu, Upload } from "lucide-react"
+import { Search, FlaskConical, FileText, CheckCircle, AlertTriangle, BarChart, Upload, RefreshCw } from "lucide-react"
 import Sidebar from "@/components/sidebar"
 import MobileSidebar from "@/components/mobile-sidebar"
 import { PageTransition } from "@/components/page-transition"
@@ -124,6 +124,7 @@ export default function Laboratory() {
   const [testData, setTestData] = useState([])
   const [notes, setNotes] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
+  const [refreshing, setRefreshing] = useState(false)
   const { simulateAction, activePatient } = useAppContext()
 
   // Check if there's an active patient from context
@@ -135,6 +136,12 @@ export default function Laboratory() {
       }
     }
   }, [activePatient])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setRefreshing(false)
+  }
 
   const handlePatientSelect = (patient) => {
     simulateAction(`Loading ${patient.name}'s lab orders`, 800).then(() => {
@@ -272,38 +279,76 @@ export default function Laboratory() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Sidebar />
       <MobileSidebar />
 
       {/* Main content area */}
-
-      <main className="flex-1 lg:ml-64 min-h-screen overflow-y-auto">
+      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         <PageTransition>
           <div className="p-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+              {/* Header with same design as Triage */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+              >
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Laboratory</h1>
-                  <p className="text-gray-600">Process lab tests and manage test results</p>
+                  <motion.h1
+                    className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+                    animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
+                    transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    <motion.div
+                      className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                    >
+                      <FlaskConical className="h-8 w-8 text-white" />
+                    </motion.div>
+                    Laboratory
+                  </motion.h1>
+                  <motion.p
+                    className="text-gray-600"
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    Process lab tests and manage test results
+                  </motion.p>
                 </div>
 
-                <div className="flex items-center gap-4 w-full lg:w-auto">
-                  <Button variant="outline" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-                    <Menu className="h-5 w-5" />
-                  </Button>
+                <div className="flex items-center gap-4 mt-4 lg:mt-0">
                   <div className="relative flex-1 lg:flex-none">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                       placeholder="Search patients..."
-                      className="pl-8 w-full lg:w-[250px]"
+                      className="pl-8 w-full lg:w-[250px] bg-white/80 backdrop-blur-sm"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefresh}
+                      disabled={refreshing}
+                      className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                    >
+                      <motion.div
+                        animate={refreshing ? { rotate: 360 } : {}}
+                        transition={{ duration: 1, repeat: refreshing ? Number.POSITIVE_INFINITY : 0 }}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      </motion.div>
+                      Refresh
+                    </Button>
+                  </motion.div>
                   <NotificationPanel />
                 </div>
-              </div>
+              </motion.div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-3 mb-8">
@@ -334,7 +379,7 @@ export default function Laboratory() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <Card>
+                    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                       <CardHeader>
                         <div className="flex items-center justify-between">
                           <CardTitle className="flex items-center gap-2">
@@ -354,7 +399,8 @@ export default function Laboratory() {
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: index * 0.1, duration: 0.4 }}
-                              className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer"
+                              whileHover={{ scale: 1.01, y: -2 }}
+                              className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer bg-gray-50/80 hover:bg-gray-100/80"
                               onClick={() => handlePatientSelect(patient)}
                             >
                               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -388,16 +434,18 @@ export default function Laboratory() {
                                   </Badge>
                                   <Badge className={getStatusColor(patient.status)}>{patient.status}</Badge>
                                 </div>
-                                <Button
-                                  className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handlePatientSelect(patient)
-                                  }}
-                                >
-                                  <FlaskConical className="h-4 w-4 mr-2" />
-                                  Process Tests
-                                </Button>
+                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                  <Button
+                                    className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handlePatientSelect(patient)
+                                    }}
+                                  >
+                                    <FlaskConical className="h-4 w-4 mr-2" />
+                                    Process Tests
+                                  </Button>
+                                </motion.div>
                               </div>
                             </motion.div>
                           ))}
@@ -446,7 +494,7 @@ export default function Laboratory() {
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                           {/* Test List */}
-                          <Card>
+                          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                                 <FileText className="h-5 w-5 text-[#581c87]" />
@@ -483,7 +531,7 @@ export default function Laboratory() {
                           {/* Test Results Form */}
                           <div className="lg:col-span-2">
                             {selectedTest ? (
-                              <Card>
+                              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                                 <CardHeader>
                                   <div className="flex items-center justify-between">
                                     <CardTitle className="flex items-center gap-2">
@@ -519,7 +567,11 @@ export default function Laboratory() {
                                               updatedData[index].value = e.target.value
                                               setTestData(updatedData)
                                             }}
-                                            className={isFieldOutOfRange(field) ? "border-red-300 bg-red-50" : ""}
+                                            className={
+                                              isFieldOutOfRange(field)
+                                                ? "border-red-300 bg-red-50"
+                                                : "bg-white/80 backdrop-blur-sm"
+                                            }
                                           />
                                           {field.unit && (
                                             <div className="flex items-center px-3 bg-gray-100 border rounded-md text-sm text-gray-600">
@@ -539,6 +591,7 @@ export default function Laboratory() {
                                       value={notes}
                                       onChange={(e) => setNotes(e.target.value)}
                                       rows={3}
+                                      className="bg-white/80 backdrop-blur-sm"
                                     />
                                   </div>
 
@@ -546,18 +599,20 @@ export default function Laboratory() {
                                     <Button variant="outline" onClick={() => setSelectedTest(null)}>
                                       Cancel
                                     </Button>
-                                    <Button
-                                      className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-                                      onClick={handleCompleteTest}
-                                    >
-                                      <CheckCircle className="h-4 w-4 mr-2" />
-                                      Complete Test
-                                    </Button>
+                                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                      <Button
+                                        className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+                                        onClick={handleCompleteTest}
+                                      >
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        Complete Test
+                                      </Button>
+                                    </motion.div>
                                   </div>
                                 </CardContent>
                               </Card>
                             ) : (
-                              <Card>
+                              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                                 <CardContent className="p-8 text-center">
                                   <FlaskConical className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                                   <h3 className="text-xl font-semibold text-gray-700 mb-2">Select a Test</h3>
@@ -569,7 +624,7 @@ export default function Laboratory() {
                         </div>
                       </div>
                     ) : (
-                      <Card>
+                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                         <CardContent className="p-8 text-center">
                           <FlaskConical className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                           <h3 className="text-xl font-semibold text-gray-700 mb-2">No Patient Selected</h3>
@@ -590,7 +645,7 @@ export default function Laboratory() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <Card>
+                    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <BarChart className="h-5 w-5 text-[#581c87]" />

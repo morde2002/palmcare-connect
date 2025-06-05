@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Users, Clock, Search, ArrowRight, X, Menu } from "lucide-react"
+import { Users, Clock, Search, ArrowRight, X, RefreshCw } from "lucide-react"
 import Sidebar from "@/components/sidebar"
+import MobileSidebar from "@/components/mobile-sidebar"
 import { PageTransition } from "@/components/page-transition"
 import { useAppContext } from "@/components/app-context"
 import { NotificationPanel } from "@/components/notification-panel"
@@ -71,7 +72,14 @@ export default function Queue() {
   const [selectedDepartment, setSelectedDepartment] = useState("All Departments")
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [queue, setQueue] = useState(queueData)
+  const [refreshing, setRefreshing] = useState(false)
   const { simulateAction } = useAppContext()
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setRefreshing(false)
+  }
 
   const handleMoveToNext = (patient, currentQueue) => {
     simulateAction(`Moving ${patient.name} to next stage`, 800).then(() => {
@@ -197,8 +205,9 @@ export default function Queue() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <MobileSidebar />
 
       {/* Mobile Overlay */}
       <AnimatePresence>
@@ -213,50 +222,133 @@ export default function Queue() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 lg:ml-64 min-h-screen overflow-y-auto">
+      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         <PageTransition>
           <div className="p-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+              {/* Header with same design as Triage */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+              >
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Patient Queue</h1>
-                  <p className="text-gray-600">Manage and track patients through different service stages</p>
+                  <motion.h1
+                    className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+                    animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
+                    transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    <motion.div
+                      className="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-lg"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                    >
+                      <Users className="h-8 w-8 text-white" />
+                    </motion.div>
+                    Patient Queue
+                  </motion.h1>
+                  <motion.p
+                    className="text-gray-600"
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    Manage and track patients through different service stages
+                  </motion.p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-4 w-full lg:w-auto">
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-                      <Menu className="h-5 w-5" />
+                <div className="flex items-center gap-4 mt-4 lg:mt-0">
+                  <div className="relative flex-1 lg:flex-none">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                    <Input
+                      placeholder="Search patients..."
+                      className="pl-8 w-full lg:w-[250px] bg-white/80 backdrop-blur-sm"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    {searchTerm && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                        onClick={() => setSearchTerm("")}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                    <SelectTrigger className="w-[180px] bg-white/80 backdrop-blur-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefresh}
+                      disabled={refreshing}
+                      className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                    >
+                      <motion.div
+                        animate={refreshing ? { rotate: 360 } : {}}
+                        transition={{ duration: 1, repeat: refreshing ? Number.POSITIVE_INFINITY : 0 }}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      </motion.div>
+                      Refresh
                     </Button>
-                    <div className="relative flex-1">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                      <Input
-                        placeholder="Search patients..."
-                        className="pl-8"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="w-full lg:w-auto">
-                    <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                      <SelectTrigger className="w-full lg:w-[180px]">
-                        <SelectValue placeholder="Department" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {departments.map((dept) => (
-                          <SelectItem key={dept} value={dept}>
-                            {dept}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
+                  </motion.div>
                   <NotificationPanel />
                 </div>
-              </div>
+              </motion.div>
+
+              {/* Stats Cards */}
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {Object.entries(queue).map(([queueType, patients], index) => (
+                  <motion.div key={queueType} variants={itemVariants}>
+                    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                      <CardContent className="p-6 relative">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 capitalize">{queueType}</p>
+                            <motion.p
+                              className="text-3xl font-bold text-gray-900 mt-2"
+                              animate={{ scale: [1, 1.05, 1] }}
+                              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                            >
+                              {patients.length}
+                            </motion.p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {patients.filter((p) => p.status === "waiting").length} waiting
+                            </p>
+                          </div>
+                          <motion.div
+                            className="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <Users className="h-6 w-6 text-white" />
+                          </motion.div>
+                        </div>
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </motion.div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-4 mb-8">
@@ -264,224 +356,159 @@ export default function Queue() {
                     value="triage"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
                   >
-                    Triage
+                    Triage ({queue.triage.length})
                   </TabsTrigger>
                   <TabsTrigger
                     value="consultation"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
                   >
-                    Consultation
+                    Consultation ({queue.consultation.length})
                   </TabsTrigger>
                   <TabsTrigger
                     value="laboratory"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
                   >
-                    Laboratory
+                    Laboratory ({queue.laboratory.length})
                   </TabsTrigger>
                   <TabsTrigger
                     value="pharmacy"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#581c87] data-[state=active]:to-[#312e81] data-[state=active]:text-white"
                   >
-                    Pharmacy
+                    Pharmacy ({queue.pharmacy.length})
                   </TabsTrigger>
                 </TabsList>
 
-                {/* Triage Queue */}
-                <TabsContent value="triage">
-                  <QueueContent
-                    title="Triage Queue"
-                    icon={<Users className="h-5 w-5 text-[#581c87]" />}
-                    patients={filteredQueue("triage")}
-                    onMoveToNext={(patient) => handleMoveToNext(patient, "triage")}
-                    onRemove={(patient) => handleRemoveFromQueue(patient, "triage")}
-                    onStartService={(patient) => handleStartService(patient, "triage")}
-                    nextStage="Consultation"
-                    getPriorityColor={getPriorityColor}
-                    getStatusColor={getStatusColor}
-                  />
-                </TabsContent>
-
-                {/* Consultation Queue */}
-                <TabsContent value="consultation">
-                  <QueueContent
-                    title="Consultation Queue"
-                    icon={<Users className="h-5 w-5 text-[#581c87]" />}
-                    patients={filteredQueue("consultation")}
-                    onMoveToNext={(patient) => handleMoveToNext(patient, "consultation")}
-                    onRemove={(patient) => handleRemoveFromQueue(patient, "consultation")}
-                    onStartService={(patient) => handleStartService(patient, "consultation")}
-                    nextStage="Laboratory"
-                    getPriorityColor={getPriorityColor}
-                    getStatusColor={getStatusColor}
-                  />
-                </TabsContent>
-
-                {/* Laboratory Queue */}
-                <TabsContent value="laboratory">
-                  <QueueContent
-                    title="Laboratory Queue"
-                    icon={<Users className="h-5 w-5 text-[#581c87]" />}
-                    patients={filteredQueue("laboratory")}
-                    onMoveToNext={(patient) => handleMoveToNext(patient, "laboratory")}
-                    onRemove={(patient) => handleRemoveFromQueue(patient, "laboratory")}
-                    onStartService={(patient) => handleStartService(patient, "laboratory")}
-                    nextStage="Pharmacy"
-                    getPriorityColor={getPriorityColor}
-                    getStatusColor={getStatusColor}
-                  />
-                </TabsContent>
-
-                {/* Pharmacy Queue */}
-                <TabsContent value="pharmacy">
-                  <QueueContent
-                    title="Pharmacy Queue"
-                    icon={<Users className="h-5 w-5 text-[#581c87]" />}
-                    patients={filteredQueue("pharmacy")}
-                    onMoveToNext={(patient) => handleMoveToNext(patient, "pharmacy")}
-                    onRemove={(patient) => handleRemoveFromQueue(patient, "pharmacy")}
-                    onStartService={(patient) => handleStartService(patient, "pharmacy")}
-                    nextStage="Complete"
-                    getPriorityColor={getPriorityColor}
-                    getStatusColor={getStatusColor}
-                    isLastStage={true}
-                  />
-                </TabsContent>
+                {Object.entries(queue).map(([queueType, patients]) => (
+                  <TabsContent key={queueType} value={queueType}>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2 capitalize">
+                            <Users className="h-5 w-5 text-[#581c87]" />
+                            {queueType} Queue
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <AnimatePresence>
+                            {filteredQueue(queueType).length === 0 ? (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="text-center py-12"
+                              >
+                                <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                                <h3 className="text-lg font-semibold text-gray-600 mb-2">No Patients in Queue</h3>
+                                <p className="text-gray-500">All patients have been processed</p>
+                              </motion.div>
+                            ) : (
+                              <motion.div
+                                className="space-y-4"
+                                variants={containerVariants}
+                                initial="hidden"
+                                animate="visible"
+                              >
+                                {filteredQueue(queueType).map((patient, index) => (
+                                  <motion.div
+                                    key={patient.id}
+                                    variants={itemVariants}
+                                    className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 group bg-gray-50/80 hover:bg-gray-100/80"
+                                    whileHover={{ scale: 1.01 }}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform duration-300">
+                                          {patient.name
+                                            .split(" ")
+                                            .map((n) => n[0])
+                                            .join("")}
+                                        </div>
+                                        <div>
+                                          <h3 className="font-semibold text-gray-900">{patient.name}</h3>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <p className="text-sm text-gray-600">ID: {patient.id}</p>
+                                            <p className="text-sm text-gray-600">Dept: {patient.department}</p>
+                                          </div>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <Clock className="h-4 w-4 text-gray-500" />
+                                            <span className="text-sm text-gray-600">
+                                              Wait time: {patient.waitTime} min
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex flex-col gap-2">
+                                          <Badge className={getPriorityColor(patient.priority)}>
+                                            {patient.priority} priority
+                                          </Badge>
+                                          <Badge className={getStatusColor(patient.status)}>{patient.status}</Badge>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          {patient.status === "waiting" && (
+                                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                              <Button
+                                                size="sm"
+                                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                                                onClick={() => handleStartService(patient, queueType)}
+                                              >
+                                                Start Service
+                                              </Button>
+                                            </motion.div>
+                                          )}
+                                          {queueType !== "pharmacy" && (
+                                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                              <Button
+                                                size="sm"
+                                                className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+                                                onClick={() => handleMoveToNext(patient, queueType)}
+                                              >
+                                                <ArrowRight className="h-4 w-4 mr-1" />
+                                                Next Stage
+                                              </Button>
+                                            </motion.div>
+                                          )}
+                                          {queueType === "pharmacy" && (
+                                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                              <Button
+                                                size="sm"
+                                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                                                onClick={() => handleRemoveFromQueue(patient, queueType)}
+                                              >
+                                                Complete
+                                              </Button>
+                                            </motion.div>
+                                          )}
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            onClick={() => handleRemoveFromQueue(patient, queueType)}
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  </TabsContent>
+                ))}
               </Tabs>
             </motion.div>
           </div>
         </PageTransition>
       </main>
     </div>
-  )
-}
-
-function QueueContent({
-  title,
-  icon,
-  patients,
-  onMoveToNext,
-  onRemove,
-  onStartService,
-  nextStage,
-  getPriorityColor,
-  getStatusColor,
-  isLastStage = false,
-}) {
-  return (
-    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              {icon}
-              {title}
-            </CardTitle>
-            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-              {patients.length} patients
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {patients.length > 0 ? (
-            <motion.div
-              className="space-y-4"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0.1,
-                  },
-                },
-              }}
-            >
-              {patients.map((patient, index) => (
-                <motion.div
-                  key={patient.id}
-                  variants={{
-                    hidden: { y: 20, opacity: 0 },
-                    visible: {
-                      y: 0,
-                      opacity: 1,
-                      transition: {
-                        type: "spring",
-                        stiffness: 100,
-                        damping: 12,
-                      },
-                    },
-                  }}
-                  className="p-4 border rounded-lg hover:shadow-md transition-all duration-200"
-                >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-semibold">
-                        {patient.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{patient.name}</h3>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          <p className="text-sm text-gray-600">ID: {patient.id}</p>
-                          <p className="text-sm text-gray-600">Dept: {patient.department}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge className={getPriorityColor(patient.priority)}>{patient.priority} priority</Badge>
-                      <Badge className={getStatusColor(patient.status)}>{patient.status}</Badge>
-                      <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs">
-                        <Clock className="h-3 w-3 text-gray-500" />
-                        <span>{patient.waitTime}m</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {patient.status === "waiting" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-purple-200 hover:bg-purple-50 hover:text-purple-700"
-                          onClick={() => onStartService(patient)}
-                        >
-                          Start Service
-                        </Button>
-                      )}
-                      {patient.status === "in-progress" && (
-                        <Button
-                          size="sm"
-                          className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-                          onClick={() => onMoveToNext(patient)}
-                        >
-                          {isLastStage ? "Complete" : `Send to ${nextStage}`}
-                          <ArrowRight className="ml-1 h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-red-200 hover:bg-red-50 hover:text-red-700"
-                        onClick={() => onRemove(patient)}
-                      >
-                        <X className="mr-1 h-4 w-4" />
-                        Remove
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium mb-2">No patients in queue</h3>
-              <p>Patients will appear here when they are ready for this stage</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
   )
 }

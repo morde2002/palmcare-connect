@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -22,7 +22,7 @@ import {
   Thermometer,
   Pill,
   CheckCircle,
-  Menu,
+  RefreshCw,
 } from "lucide-react"
 import Sidebar from "@/components/sidebar"
 import MobileSidebar from "@/components/mobile-sidebar"
@@ -125,14 +125,15 @@ const labTests = [
 
 export default function Consultation() {
   const [activeTab, setActiveTab] = useState("queue")
-  const [selectedPatient, setSelectedPatient] = useState(null)
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [diagnosis, setDiagnosis] = useState("")
   const [notes, setNotes] = useState("")
-  const [selectedMedications, setSelectedMedications] = useState([])
-  const [selectedLabTests, setSelectedLabTests] = useState([])
+  const [selectedMedications, setSelectedMedications] = useState<string[]>([])
+  const [selectedLabTests, setSelectedLabTests] = useState<string[]>([])
   const [customMedication, setCustomMedication] = useState("")
   const [customLabTest, setCustomLabTest] = useState("")
+  const [refreshing, setRefreshing] = useState(false)
   const { simulateAction, activePatient } = useAppContext()
 
   // Check if there's an active patient from context
@@ -140,12 +141,42 @@ export default function Consultation() {
     if (activePatient) {
       const patient = patientQueue.find((p) => p.id === activePatient.id)
       if (patient) {
-        handlePatientSelect(patient)
+        handlePatientSelect({
+          ...patient,
+          priority: patient.priority as "high" | "medium" | "low",
+          status: patient.status as "waiting" | "in-progress" | "completed",
+        })
       }
     }
   }, [activePatient])
 
-  const handlePatientSelect = (patient) => {
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    setRefreshing(false)
+  }
+
+  interface VitalSigns {
+    bloodPressure: string
+    heartRate: string
+    temperature: string
+    respiratoryRate: string
+    oxygenSaturation: string
+  }
+
+  interface Patient {
+    id: string
+    name: string
+    age: number
+    gender: string
+    waitTime: number
+    priority: "high" | "medium" | "low"
+    status: "waiting" | "in-progress" | "completed"
+    vitalSigns: VitalSigns
+    chiefComplaint: string
+  }
+
+  const handlePatientSelect = (patient: Patient) => {
     simulateAction(`Loading ${patient.name}'s medical record`, 800).then(() => {
       setSelectedPatient(patient)
       setActiveTab("consultation")
@@ -172,7 +203,7 @@ export default function Consultation() {
     }
   }
 
-  const handleToggleMedication = (medication) => {
+  const handleToggleMedication = (medication: string) => {
     if (selectedMedications.includes(medication)) {
       setSelectedMedications(selectedMedications.filter((med) => med !== medication))
     } else {
@@ -180,7 +211,7 @@ export default function Consultation() {
     }
   }
 
-  const handleToggleLabTest = (test) => {
+  const handleToggleLabTest = (test: string) => {
     if (selectedLabTests.includes(test)) {
       setSelectedLabTests(selectedLabTests.filter((t) => t !== test))
     } else {
@@ -213,30 +244,25 @@ export default function Consultation() {
       patient.id.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800 border-red-200"
-      case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "low":
-        return "bg-green-100 text-green-800 border-green-200"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+  const getPriorityColor = (priority: "high" | "medium" | "low" | string) => {
+    const colorMap: Record<"high" | "medium" | "low", string> = {
+      high: "bg-red-100 text-red-800 border-red-200",
+      medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      low: "bg-green-100 text-green-800 border-green-200",
     }
+    return colorMap[priority as "high" | "medium" | "low"] || "bg-gray-100 text-gray-800 border-gray-200"
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "in-progress":
-        return "bg-blue-100 text-blue-800 border-blue-200"
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200"
-      case "waiting":
-        return "bg-gray-100 text-gray-800 border-gray-200"
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+  const getStatusColor = (status: "in-progress" | "completed" | "waiting" | string) => {
+    const colorMap: Record<"in-progress" | "completed" | "waiting", string> = {
+      "in-progress": "bg-blue-100 text-blue-800 border-blue-200",
+      completed: "bg-green-100 text-green-800 border-green-200",
+      waiting: "bg-gray-100 text-gray-800 border-gray-200",
     }
+    if (status in colorMap) {
+      return colorMap[status as "in-progress" | "completed" | "waiting"];
+    }
+    return "bg-gray-100 text-gray-800 border-gray-200";
   }
 
   return (
@@ -245,35 +271,71 @@ export default function Consultation() {
       <MobileSidebar />
 
       {/* Main Content Area */}
-
-
       <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         <PageTransition>
           <div className="p-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
+              {/* Header with same design as Triage */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+              >
                 <div>
-                  <Stethoscope className="h-8 w-8 text-white" />
-                  <h1 className="text-3xl font-bold text-gray-900">Consultation</h1>
-                  <p className="text-gray-600">Examine patients, diagnose conditions, and prescribe treatments</p>
+                  <motion.h1
+                    className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+                    animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
+                    transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    <motion.div
+                      className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600 shadow-lg"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                    >
+                      <Stethoscope className="h-8 w-8 text-white" />
+                    </motion.div>
+                    Consultation
+                  </motion.h1>
+                  <motion.p
+                    className="text-gray-600"
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    Examine patients, diagnose conditions, and prescribe treatments
+                  </motion.p>
                 </div>
 
-                <div className="flex items-center gap-4 w-full lg:w-auto">
-                  <Button variant="outline" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-                    <Menu className="h-5 w-5" />
-                  </Button>
+                <div className="flex items-center gap-4 mt-4 lg:mt-0">
                   <div className="relative flex-1 lg:flex-none">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                       placeholder="Search patients..."
-                      className="pl-8 w-full lg:w-[250px]"
+                      className="pl-8 w-full lg:w-[250px] bg-white/80 backdrop-blur-sm"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefresh}
+                      disabled={refreshing}
+                      className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                    >
+                      <motion.div
+                        animate={refreshing ? { rotate: 360 } : {}}
+                        transition={{ duration: 1, repeat: refreshing ? Number.POSITIVE_INFINITY : 0 }}
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      </motion.div>
+                      Refresh
+                    </Button>
+                  </motion.div>
                   <NotificationPanel />
                 </div>
-              </div>
+              </motion.div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-3 mb-8">
@@ -304,7 +366,7 @@ export default function Consultation() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <Card>
+                    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                       <CardHeader>
                         <div className="flex items-center justify-between">
                           <CardTitle className="flex items-center gap-2">
@@ -324,8 +386,15 @@ export default function Consultation() {
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: index * 0.1, duration: 0.4 }}
-                              className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer"
-                              onClick={() => handlePatientSelect(patient)}
+                              whileHover={{ scale: 1.01, y: -2 }}
+                              className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer bg-gray-50/80 hover:bg-gray-100/80"
+                              onClick={() =>
+                                handlePatientSelect({
+                                  ...patient,
+                                  priority: patient.priority as "high" | "medium" | "low",
+                                  status: patient.status as "waiting" | "in-progress" | "completed",
+                                })
+                              }
                             >
                               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                                 <div className="flex items-center gap-4">
@@ -351,16 +420,22 @@ export default function Consultation() {
                                   </Badge>
                                   <Badge className={getStatusColor(patient.status)}>{patient.status}</Badge>
                                 </div>
-                                <Button
-                                  className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handlePatientSelect(patient)
-                                  }}
-                                >
-                                  <Stethoscope className="h-4 w-4 mr-2" />
-                                  Start Consultation
-                                </Button>
+                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                  <Button
+                                    className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handlePatientSelect({
+                                        ...patient,
+                                        priority: patient.priority as "high" | "medium" | "low",
+                                        status: patient.status as "waiting" | "in-progress" | "completed",
+                                      })
+                                    }}
+                                  >
+                                    <Stethoscope className="h-4 w-4 mr-2" />
+                                    Start Consultation
+                                  </Button>
+                                </motion.div>
                               </div>
                             </motion.div>
                           ))}
@@ -409,7 +484,7 @@ export default function Consultation() {
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                           {/* Patient Information */}
-                          <Card>
+                          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                                 <ClipboardList className="h-5 w-5 text-[#581c87]" />
@@ -459,7 +534,7 @@ export default function Consultation() {
                           </Card>
 
                           {/* Diagnosis */}
-                          <Card>
+                          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                                 <FileText className="h-5 w-5 text-[#581c87]" />
@@ -470,7 +545,7 @@ export default function Consultation() {
                               <div className="space-y-2">
                                 <Label>Diagnosis</Label>
                                 <Select value={diagnosis} onValueChange={setDiagnosis}>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="bg-white/80 backdrop-blur-sm">
                                     <SelectValue placeholder="Select or enter diagnosis" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -490,13 +565,14 @@ export default function Consultation() {
                                   value={notes}
                                   onChange={(e) => setNotes(e.target.value)}
                                   rows={5}
+                                  className="bg-white/80 backdrop-blur-sm"
                                 />
                               </div>
                             </CardContent>
                           </Card>
 
                           {/* Prescriptions & Lab Tests */}
-                          <Card>
+                          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                                 <Pill className="h-5 w-5 text-[#581c87]" />
@@ -506,7 +582,7 @@ export default function Consultation() {
                             <CardContent className="space-y-4">
                               <div className="space-y-2">
                                 <Label>Medications</Label>
-                                <div className="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto p-2 border rounded-md">
+                                <div className="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto p-2 border rounded-md bg-white/80 backdrop-blur-sm">
                                   {commonMedications.map((med) => (
                                     <div key={med} className="flex items-center space-x-2">
                                       <Checkbox
@@ -528,6 +604,7 @@ export default function Consultation() {
                                     placeholder="Add custom medication..."
                                     value={customMedication}
                                     onChange={(e) => setCustomMedication(e.target.value)}
+                                    className="bg-white/80 backdrop-blur-sm"
                                   />
                                   <Button variant="outline" onClick={handleAddMedication}>
                                     Add
@@ -537,7 +614,7 @@ export default function Consultation() {
 
                               <div className="space-y-2">
                                 <Label>Lab Tests</Label>
-                                <div className="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto p-2 border rounded-md">
+                                <div className="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto p-2 border rounded-md bg-white/80 backdrop-blur-sm">
                                   {labTests.map((test) => (
                                     <div key={test} className="flex items-center space-x-2">
                                       <Checkbox
@@ -559,6 +636,7 @@ export default function Consultation() {
                                     placeholder="Add custom lab test..."
                                     value={customLabTest}
                                     onChange={(e) => setCustomLabTest(e.target.value)}
+                                    className="bg-white/80 backdrop-blur-sm"
                                   />
                                   <Button variant="outline" onClick={handleAddLabTest}>
                                     Add
@@ -574,17 +652,19 @@ export default function Consultation() {
                           <Button variant="outline" onClick={() => setActiveTab("queue")}>
                             Cancel
                           </Button>
-                          <Button
-                            className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-                            onClick={handleCompleteConsultation}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Complete Consultation
-                          </Button>
+                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <Button
+                              className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
+                              onClick={handleCompleteConsultation}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Complete Consultation
+                            </Button>
+                          </motion.div>
                         </div>
                       </div>
                     ) : (
-                      <Card>
+                      <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                         <CardContent className="p-8 text-center">
                           <Stethoscope className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                           <h3 className="text-xl font-semibold text-gray-700 mb-2">No Patient Selected</h3>
@@ -605,7 +685,7 @@ export default function Consultation() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <Card>
+                    <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <FileText className="h-5 w-5 text-[#581c87]" />

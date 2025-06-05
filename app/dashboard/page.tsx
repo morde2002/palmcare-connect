@@ -21,6 +21,8 @@ import {
 import Sidebar from "@/components/sidebar"
 import MobileSidebar from "@/components/mobile-sidebar"
 import dynamic from "next/dynamic"
+import { link } from "fs"
+import { cursorTo } from "readline"
 
 // Dynamically import chart components to avoid SSR issues
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false })
@@ -43,6 +45,8 @@ const statsData = [
     icon: Clock,
     color: "from-yellow-500 to-yellow-600",
     trend: "down",
+    link: "/triage",
+    cursorTo: "pointer",
   },
   {
     title: "Active Consultations",
@@ -52,6 +56,7 @@ const statsData = [
     icon: Activity,
     color: "from-orange-500 to-orange-600",
     trend: "up",
+    link: "/consultations",
   },
   {
     title: "Completed Today",
@@ -65,10 +70,10 @@ const statsData = [
 ]
 
 const waitingPatients = [
-  { id: "P-1234", name: "John Doe", waitingFor: "Triage", waitTime: 14, priority: "high", avatar: "JD" },
-  { id: "P-1235", name: "Jane Smith", waitingFor: "Consultation", waitTime: 22, priority: "medium", avatar: "JS" },
-  { id: "P-1236", name: "Bob Johnson", waitingFor: "Lab Results", waitTime: 9, priority: "low", avatar: "BJ" },
-  { id: "P-1237", name: "Alice Brown", waitingFor: "Prescription", waitTime: 5, priority: "medium", avatar: "AB" },
+  { id: "P-1234", name: "John Doe", waitingFor: "Triage", waitTime: 14, avatar: "JD", link: "/triage" },
+  { id: "P-1235", name: "Jane Smith", waitingFor: "Consultation", waitTime: 22, avatar: "JS" },
+  { id: "P-1236", name: "Bob Johnson", waitingFor: "Lab Results", waitTime: 9, avatar: "BJ" },
+  { id: "P-1237", name: "Alice Brown", waitingFor: "Prescription", waitTime: 5, avatar: "AB" },
 ]
 
 const chartData = [
@@ -127,7 +132,16 @@ export default function Dashboard() {
     }
   }, [])
 
-  const parseUserInfo = (username) => {
+  interface UserInfo {
+    name: string
+    role: string
+  }
+
+  interface ParseUserInfo {
+    (username: string): UserInfo
+  }
+
+  const parseUserInfo: ParseUserInfo = (username) => {
     // Extract name from email and determine role
     const emailPart = username.split("@")[0]
     const nameParts = emailPart.split(/[._-]/)
@@ -172,7 +186,7 @@ export default function Dashboard() {
     },
   }
 
-  const getActivityIcon = (type) => {
+  const getActivityIcon = (type: string) => {
     switch (type) {
       case "consultation":
         return Stethoscope
@@ -187,7 +201,7 @@ export default function Dashboard() {
     }
   }
 
-  const getActivityColor = (status) => {
+  const getActivityColor = (status: string) => {
     switch (status) {
       case "completed":
         return "text-green-500"
@@ -213,7 +227,7 @@ export default function Dashboard() {
   // ApexCharts options for line chart
   const lineChartOptions = {
     chart: {
-      type: "line",
+      type: "line" as const,
       toolbar: {
         show: false,
       },
@@ -233,7 +247,7 @@ export default function Dashboard() {
     },
     colors: ["#581c87", "#7c3aed"],
     stroke: {
-      curve: "smooth",
+      curve: ["smooth", "smooth"] as ("smooth" | "straight" | "stepline" | "linestep" | "monotoneCubic")[],
       width: [3, 2],
     },
     xaxis: {
@@ -265,7 +279,7 @@ export default function Dashboard() {
   // ApexCharts options for bar chart
   const barChartOptions = {
     chart: {
-      type: "bar",
+      type: "bar" as const,
       toolbar: {
         show: false,
       },
@@ -298,7 +312,7 @@ export default function Dashboard() {
   // ApexCharts options for pie chart
   const pieChartOptions = {
     chart: {
-      type: "donut",
+      type: "donut" as const,
       animations: {
         enabled: true,
         easing: "easeinout",
@@ -631,18 +645,6 @@ export default function Dashboard() {
                               </Badge>
                               <p className="text-xs text-gray-500">{patient.waitTime}m</p>
                             </div>
-                            <Badge
-                              variant={
-                                patient.priority === "high"
-                                  ? "destructive"
-                                  : patient.priority === "medium"
-                                    ? "default"
-                                    : "secondary"
-                              }
-                              className="text-xs"
-                            >
-                              {patient.priority}
-                            </Badge>
                           </div>
                         </motion.div>
                       ))}
