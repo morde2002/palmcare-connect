@@ -194,7 +194,7 @@ export default function MobileSidebar() {
             animate="open"
             exit="closed"
             variants={sidebarVariants}
-            className="bg-gradient-to-b from-[#0f0f23] via-[#1a1a3e] to-[#2d1b69] text-white flex flex-col fixed left-0 top-0 h-screen z-[9999] shadow-2xl overflow-hidden w-[85%] sm:w-[70%] md:w-[60%]"
+            className="bg-gradient-to-b from-[#0f0f23] via-[#1a1a3e] to-[#2d1b69] text-white flex flex-col fixed left-0 top-0 h-screen z-[9999] shadow-2xl overflow-hidden w-[80%] sm:w-[70%] md:w-[60%]"
           >
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
@@ -260,7 +260,7 @@ export default function MobileSidebar() {
                   className="flex items-center gap-3"
                 >
                   <motion.div
-                    className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"
+                    className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
                   >
@@ -268,7 +268,7 @@ export default function MobileSidebar() {
                   </motion.div>
                   <div>
                     <motion.h1
-                      className="text-x font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent"
+                      className="text-lg font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent"
                       animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                       transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                     >

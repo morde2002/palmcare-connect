@@ -166,14 +166,32 @@ export default function PatientRegistration() {
       <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
         <div className="p-4 lg:p-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="flex justify-between items-center mb-6 lg:mb-8">
-              <div className="flex items-center gap-4">
-
-                <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Patient Registration</h1>
-                  <p className="text-gray-600 text-sm lg:text-base">
+            {/* Updated Header */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 lg:mb-8 gap-4"
+            >
+              <div className="flex items-center gap-3 sm:gap-4">
+                <motion.div
+                  className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-[#581c87] to-[#312e81] shadow-lg"
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                >
+                  <UserPlus className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                </motion.div>
+                <div className="text-center sm:text-left">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+                    Patient Registration
+                  </h1>
+                  <motion.p
+                    className="text-sm sm:text-base text-gray-600"
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
+                  >
                     Register new patients or search for existing patient records
-                  </p>
+                  </motion.p>
                 </div>
               </div>
 
@@ -182,7 +200,7 @@ export default function PatientRegistration() {
                 <span className="hidden sm:inline">Register New Patient</span>
                 <span className="sm:hidden">Register</span>
               </Button>
-            </div>
+            </motion.div>
 
             <Card className="max-w-6xl mx-auto">
               <CardHeader>
