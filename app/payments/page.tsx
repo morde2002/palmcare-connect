@@ -44,6 +44,7 @@ import {
 import Sidebar from "@/components/sidebar"
 import MobileSidebar from "@/components/mobile-sidebar"
 import { useToast } from "@/components/ui/use-toast"
+import ScrollToTop from "@/components/scroll-to-top"
 
 const pendingPayments = [
   {
@@ -387,7 +388,7 @@ export default function Payments() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Sidebar />
       <MobileSidebar />
-      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
+      <main className="lg:ml-64 p-3 sm:p-4 lg:p-8 pt-20 sm:pt-24 lg:pt-8">
         <div className="p-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             {/* Header with same design as Triage */}
@@ -395,25 +396,25 @@ export default function Payments() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+              className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-6 sm:mb-8"
             >
               <div>
                 <motion.h1
-                  className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3"
                   animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                   transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
                 >
                   <motion.div
-                    className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 shadow-lg"
+                    className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 shadow-lg"
                     animate={{ rotate: [0, 5, -5, 0] }}
                     transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                   >
-                    <DollarSign className="h-8 w-8 text-white" />
+                    <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                   </motion.div>
                   Payment Management
                 </motion.h1>
                 <motion.p
-                  className="text-gray-600"
+                  className="text-sm sm:text-base text-gray-600"
                   animate={{ opacity: [0.7, 1, 0.7] }}
                   transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                 >
@@ -421,14 +422,14 @@ export default function Payments() {
                 </motion.p>
               </div>
 
-              <div className="flex items-center gap-4 mt-4 lg:mt-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                    className="w-full sm:w-auto bg-white/80 backdrop-blur-sm hover:bg-white h-10 sm:h-9"
                   >
                     <motion.div
                       animate={refreshing ? { rotate: 360 } : {}}
@@ -442,7 +443,7 @@ export default function Payments() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     variant="outline"
-                    className="bg-white/80 backdrop-blur-sm hover:bg-white group transition-all duration-200"
+                    className="w-full sm:w-auto bg-white/80 backdrop-blur-sm hover:bg-white group transition-all duration-200 h-10 sm:h-9"
                     onClick={() => {
                       toast({
                         title: "Generating Report",
@@ -456,7 +457,7 @@ export default function Payments() {
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
-                    className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group transition-all duration-200"
+                    className="w-full sm:w-auto bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group transition-all duration-200 h-10 sm:h-9"
                     onClick={() => {
                       toast({
                         title: "New Invoice",
@@ -473,7 +474,7 @@ export default function Payments() {
 
             {/* Stats Cards */}
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -736,23 +737,25 @@ export default function Payments() {
                               <motion.div
                                 key={payment.id}
                                 variants={itemVariants}
-                                className="p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group bg-gray-50/80 hover:bg-gray-100/80"
+                                className="p-4 sm:p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group bg-gray-50/80 hover:bg-gray-100/80"
                                 onClick={() => handlePaymentSelect(payment)}
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.99 }}
                               >
-                                <div className="flex items-start justify-between">
-                                  <div className="flex items-start gap-4 flex-1">
-                                    <div className="w-16 h-16 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform duration-300">
+                                <div className="flex flex-col space-y-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
+                                  <div className="flex items-start gap-3 sm:gap-4 flex-1">
+                                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-lg group-hover:scale-110 transition-transform duration-300">
                                       {payment.patientName
                                         .split(" ")
                                         .map((n) => n[0])
                                         .join("")}
                                     </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-lg font-semibold text-gray-900">{payment.patientName}</h3>
-                                        <Badge className={getStatusColor(payment.status)}>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                                        <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                                          {payment.patientName}
+                                        </h3>
+                                        <Badge className={`${getStatusColor(payment.status)} text-xs`}>
                                           <span className="flex items-center gap-1">
                                             {payment.status === "pending" && <Clock className="h-3 w-3" />}
                                             {payment.status === "overdue" && <AlertTriangle className="h-3 w-3" />}
@@ -760,15 +763,15 @@ export default function Payments() {
                                           </span>
                                         </Badge>
                                       </div>
-                                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600 mb-3">
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-3">
                                         <p>Invoice: {payment.id}</p>
                                         <p>Patient ID: {payment.patientId}</p>
                                         <p>Created: {payment.dateCreated}</p>
                                         <p>Due: {payment.dueDate}</p>
                                       </div>
-                                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4">
                                         <div className="bg-gray-50 p-3 rounded group-hover:bg-gray-100 transition-colors duration-200">
-                                          <p className="text-sm font-medium text-gray-700 mb-1">Services</p>
+                                          <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">Services</p>
                                           <div className="space-y-1">
                                             {payment.services.map((service, idx) => (
                                               <div key={idx} className="flex justify-between text-xs text-gray-600">
@@ -779,7 +782,9 @@ export default function Payments() {
                                           </div>
                                         </div>
                                         <div className="bg-blue-50 p-3 rounded group-hover:bg-blue-100 transition-colors duration-200">
-                                          <p className="text-sm font-medium text-blue-700 mb-1">Payment Summary</p>
+                                          <p className="text-xs sm:text-sm font-medium text-blue-700 mb-1">
+                                            Payment Summary
+                                          </p>
                                           <div className="space-y-1 text-xs">
                                             <div className="flex justify-between text-gray-600">
                                               <span>Total Amount:</span>
@@ -796,24 +801,24 @@ export default function Payments() {
                                           </div>
                                         </div>
                                       </div>
-                                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                                         <p>Insurance: {payment.insuranceProvider}</p>
                                         {payment.policyNumber && <p>Policy: {payment.policyNumber}</p>}
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="flex flex-col gap-2">
-                                    <div className="text-right">
-                                      <p className="text-2xl font-bold text-gray-900">
+                                  <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end gap-3 sm:gap-4">
+                                    <div className="text-left sm:text-right">
+                                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
                                         ${payment.patientResponsibility.toFixed(2)}
                                       </p>
-                                      <p className="text-sm text-gray-500">Amount Due</p>
+                                      <p className="text-xs sm:text-sm text-gray-500">Amount Due</p>
                                     </div>
                                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                      <Button className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group-hover:scale-105 transition-transform duration-300">
-                                        <span className="flex items-center gap-2">
+                                      <Button className="w-full sm:w-auto bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group-hover:scale-105 transition-transform duration-300 text-xs sm:text-sm h-8 sm:h-9">
+                                        <span className="flex items-center gap-1 sm:gap-2">
                                           Process Payment
-                                          <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                                          <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform duration-300" />
                                         </span>
                                       </Button>
                                     </motion.div>
@@ -1410,6 +1415,7 @@ export default function Payments() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <ScrollToTop />
       </main>
     </div>
   )

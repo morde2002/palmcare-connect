@@ -59,7 +59,7 @@ export default function Sidebar() {
 
   const sidebarVariants = {
     expanded: {
-      width: 256,
+      width: 270,
       transition: {
         type: "spring",
         stiffness: 300,
@@ -179,7 +179,7 @@ export default function Sidebar() {
                 className="flex items-center gap-3"
               >
                 <motion.div
-                  className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"
+                  className="w-9 h-9 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"
                   animate={{ rotate: 360 }}
                   transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
                 >
@@ -187,7 +187,7 @@ export default function Sidebar() {
                 </motion.div>
                 <div>
                   <motion.h1
-                    className="text-xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent"
+                    className="text-lg font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent"
                     animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                     transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                   >
@@ -213,7 +213,7 @@ export default function Sidebar() {
               className="text-white hover:bg-white/20 p-2 rounded-xl bg-white/10"
             >
               <motion.div animate={{ rotate: isCollapsed ? 180 : 0 }} transition={{ duration: 0.3 }}>
-                {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={15} />}
               </motion.div>
             </Button>
           </motion.div>

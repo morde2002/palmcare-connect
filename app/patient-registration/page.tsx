@@ -13,15 +13,47 @@ import { UserPlus, Search, Hand, Phone, Calendar, User, Mail, MapPin, CheckCircl
 import Sidebar from "@/components/sidebar"
 import MobileSidebar from "@/components/mobile-sidebar"
 
+interface Patient {
+  id: string
+  firstName: string
+  lastName: string
+  dateOfBirth: string
+  gender: string
+  phone: string
+  email: string
+  address: string
+  city?: string
+  state?: string
+  zip?: string
+  emergencyContact?: {
+    name: string
+    phone: string
+  }
+  medicalInfo?: {
+    allergies: string
+    history: string
+  }
+}
+
+interface FormData {
+  firstName: string
+  lastName: string
+  dateOfBirth: string
+  gender: string
+  phone: string
+  email: string
+  address: string
+}
+
 export default function PatientRegistration() {
   const [activeTab, setActiveTab] = useState("new")
   const [searchQuery, setSearchQuery] = useState("")
-  const [foundPatient, setFoundPatient] = useState(null)
+  const [foundPatient, setFoundPatient] = useState<Patient | null>(null)
   const [showPalmScanModal, setShowPalmScanModal] = useState(false)
   const [scanStage, setScanStage] = useState("initial") // initial, scanning, complete
   const [scanProgress, setScanProgress] = useState(0)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
     dateOfBirth: "",
@@ -399,7 +431,7 @@ export default function PatientRegistration() {
                                       From Palm
                                     </Badge>
                                   </Label>
-                                  <Input id="emergencyName" value={foundPatient.emergencyContact.name} readOnly />
+                                  <Input id="emergencyName" value={foundPatient.emergencyContact?.name} readOnly />
                                 </div>
                                 <div className="space-y-2">
                                   <Label htmlFor="emergencyPhone" className="flex items-center gap-2">
@@ -411,7 +443,7 @@ export default function PatientRegistration() {
                                       From Palm
                                     </Badge>
                                   </Label>
-                                  <Input id="emergencyPhone" value={foundPatient.emergencyContact.phone} readOnly />
+                                  <Input id="emergencyPhone" value={foundPatient.emergencyContact?.phone} readOnly />
                                 </div>
                               </div>
                             </div>
@@ -429,7 +461,7 @@ export default function PatientRegistration() {
                                       From Palm
                                     </Badge>
                                   </Label>
-                                  <Input id="allergies" value={foundPatient.medicalInfo.allergies} readOnly />
+                                  <Input id="allergies" value={foundPatient.medicalInfo?.allergies} readOnly />
                                 </div>
                                 <div className="space-y-2">
                                   <Label htmlFor="medicalHistory" className="flex items-center gap-2">
@@ -441,7 +473,7 @@ export default function PatientRegistration() {
                                       From Palm
                                     </Badge>
                                   </Label>
-                                  <Input id="medicalHistory" value={foundPatient.medicalInfo.history} readOnly />
+                                  <Input id="medicalHistory" value={foundPatient.medicalInfo?.history} readOnly />
                                 </div>
                               </div>
                             </div>

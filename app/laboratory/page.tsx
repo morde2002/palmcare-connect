@@ -15,6 +15,7 @@ import MobileSidebar from "@/components/mobile-sidebar"
 import { PageTransition } from "@/components/page-transition"
 import { useAppContext } from "@/components/app-context"
 import { NotificationPanel } from "@/components/notification-panel"
+import ScrollToTop from "@/components/scroll-to-top"
 
 const labQueue = [
   {
@@ -284,7 +285,7 @@ export default function Laboratory() {
       <MobileSidebar />
 
       {/* Main content area */}
-      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
+      <main className="lg:ml-64 p-3 sm:p-4 lg:p-8 pt-20 sm:pt-24 lg:pt-8">
         <PageTransition>
           <div className="p-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -293,25 +294,25 @@ export default function Laboratory() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+                className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-6 sm:mb-8"
               >
                 <div>
                   <motion.h1
-                    className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3"
                     animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                     transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
                   >
                     <motion.div
-                      className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg"
+                      className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg"
                       animate={{ rotate: [0, 5, -5, 0] }}
                       transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                     >
-                      <FlaskConical className="h-8 w-8 text-white" />
+                      <FlaskConical className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                     </motion.div>
                     Laboratory
                   </motion.h1>
                   <motion.p
-                    className="text-gray-600"
+                    className="text-sm sm:text-base text-gray-600"
                     animate={{ opacity: [0.7, 1, 0.7] }}
                     transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                   >
@@ -319,12 +320,12 @@ export default function Laboratory() {
                   </motion.p>
                 </div>
 
-                <div className="flex items-center gap-4 mt-4 lg:mt-0">
-                  <div className="relative flex-1 lg:flex-none">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                  <div className="relative flex-1 sm:flex-none">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                       placeholder="Search patients..."
-                      className="pl-8 w-full lg:w-[250px] bg-white/80 backdrop-blur-sm"
+                      className="pl-8 w-full sm:w-[250px] bg-white/80 backdrop-blur-sm h-10 sm:h-9"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -335,7 +336,7 @@ export default function Laboratory() {
                       size="sm"
                       onClick={handleRefresh}
                       disabled={refreshing}
-                      className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                      className="w-full sm:w-auto bg-white/80 backdrop-blur-sm hover:bg-white h-10 sm:h-9"
                     >
                       <motion.div
                         animate={refreshing ? { rotate: 360 } : {}}
@@ -400,52 +401,60 @@ export default function Laboratory() {
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: index * 0.1, duration: 0.4 }}
                               whileHover={{ scale: 1.01, y: -2 }}
-                              className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer bg-gray-50/80 hover:bg-gray-100/80"
+                              className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer bg-gray-50/80 hover:bg-gray-100/80"
                               onClick={() => handlePatientSelect(patient)}
                             >
-                              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-semibold">
+                              <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center justify-between">
+                                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-semibold text-sm sm:text-base">
                                     {patient.name
                                       .split(" ")
                                       .map((n) => n[0])
                                       .join("")}
                                   </div>
-                                  <div>
-                                    <h3 className="font-semibold text-gray-900">{patient.name}</h3>
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{patient.name}</h3>
                                     <div className="flex flex-wrap gap-2 mt-1">
-                                      <p className="text-sm text-gray-600">ID: {patient.id}</p>
-                                      <p className="text-sm text-gray-600">
+                                      <p className="text-xs sm:text-sm text-gray-600">ID: {patient.id}</p>
+                                      <p className="text-xs sm:text-sm text-gray-600">
                                         {patient.age} yrs, {patient.gender}
                                       </p>
                                     </div>
                                     <div className="flex flex-wrap gap-1 mt-2">
                                       {patient.tests.map((test, idx) => (
-                                        <Badge key={idx} className={getStatusColor(test.status)} variant="outline">
+                                        <Badge
+                                          key={idx}
+                                          className={`${getStatusColor(test.status)} text-xs`}
+                                          variant="outline"
+                                        >
                                           {test.name}
                                         </Badge>
                                       ))}
                                     </div>
                                   </div>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <Badge className={getPriorityColor(patient.priority)}>
-                                    {patient.priority} priority
-                                  </Badge>
-                                  <Badge className={getStatusColor(patient.status)}>{patient.status}</Badge>
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                                  <div className="flex flex-wrap gap-2">
+                                    <Badge className={`${getPriorityColor(patient.priority)} text-xs`}>
+                                      {patient.priority} priority
+                                    </Badge>
+                                    <Badge className={`${getStatusColor(patient.status)} text-xs`}>
+                                      {patient.status}
+                                    </Badge>
+                                  </div>
+                                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                    <Button
+                                      className="w-full sm:w-auto bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white text-xs sm:text-sm h-8 sm:h-9"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handlePatientSelect(patient)
+                                      }}
+                                    >
+                                      <FlaskConical className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                      Process Tests
+                                    </Button>
+                                  </motion.div>
                                 </div>
-                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                  <Button
-                                    className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      handlePatientSelect(patient)
-                                    }}
-                                  >
-                                    <FlaskConical className="h-4 w-4 mr-2" />
-                                    Process Tests
-                                  </Button>
-                                </motion.div>
                               </div>
                             </motion.div>
                           ))}
@@ -666,6 +675,7 @@ export default function Laboratory() {
             </motion.div>
           </div>
         </PageTransition>
+        <ScrollToTop />
       </main>
     </div>
   )

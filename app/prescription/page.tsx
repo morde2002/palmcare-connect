@@ -43,8 +43,47 @@ import {
 import Sidebar from "@/components/sidebar"
 import MobileSidebar from "@/components/mobile-sidebar"
 import { useToast } from "@/components/ui/use-toast"
+import ScrollToTop from "@/components/scroll-to-top"
+import { PageTransition } from "@/components/page-transition"
+import { useAppContext } from "@/components/app-context"
 
-const prescriptionQueue = [
+interface Medication {
+  name: string
+  dosage: string
+  frequency: string
+  duration: string
+  instructions?: string
+  strength?: string
+  stock?: number
+  reorderLevel?: number
+  category?: string
+}
+
+interface Prescription {
+  id: string
+  name: string
+  age: number
+  diagnosis: string
+  doctor: string
+  orderTime: string
+  status: "pending" | "ready" | "dispensed"
+  medications: Medication[]
+}
+
+interface AlertItem {
+  id: string
+  type: "low-stock" | "expiring" | "recall"
+  message: string
+  severity: "high" | "medium" | "low"
+  timestamp: string
+  category?: string
+  name?: string
+  strength?: string
+  stock?: number
+  reorderLevel?: number
+}
+
+const prescriptionQueue: Prescription[] = [
   {
     id: "P-1237",
     name: "Alice Brown",
@@ -135,8 +174,8 @@ const frequencyOptions = [
 export default function Prescription() {
   const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("queue")
-  const [selectedPrescription, setSelectedPrescription] = useState(null)
-  const [prescriptions, setPrescriptions] = useState(prescriptionQueue)
+  const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null)
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>(prescriptionQueue)
   const [completed, setCompleted] = useState(completedPrescriptions)
   const [inventory, setInventory] = useState(medicationInventory)
   const [searchTerm, setSearchTerm] = useState("")
@@ -147,9 +186,10 @@ export default function Prescription() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
   const [showAlertDialog, setShowAlertDialog] = useState(false)
-  const [alertItem, setAlertItem] = useState(null)
+  const [alertItem, setAlertItem] = useState<AlertItem | null>(null)
   const [inventoryFilter, setInventoryFilter] = useState("all")
   const [refreshing, setRefreshing] = useState(false)
+  const { simulateAction } = useAppContext()
 
   const [newMedication, setNewMedication] = useState({
     name: "",
@@ -206,16 +246,16 @@ export default function Prescription() {
   const filteredInventory = inventory.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase())
+      item.category?.toLowerCase().includes(searchTerm.toLowerCase())
 
     if (inventoryFilter === "all") return matchesSearch
     if (inventoryFilter === "low" && item.stock <= item.reorderLevel) return matchesSearch
-    if (inventoryFilter === item.category.toLowerCase()) return matchesSearch
+    if (inventoryFilter === item.category?.toLowerCase()) return matchesSearch
 
     return false
   })
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: Prescription["status"]) => {
     switch (status) {
       case "ready":
         return "bg-green-100 text-green-800 border-green-200"
@@ -228,75 +268,53 @@ export default function Prescription() {
     }
   }
 
-  const getStockStatus = (item) => {
-    if (item.stock <= item.reorderLevel * 0.5) {
-      return { color: "bg-red-100 text-red-800 border-red-200", label: "Critical" }
-    } else if (item.stock <= item.reorderLevel) {
-      return { color: "bg-yellow-100 text-yellow-800 border-yellow-200", label: "Low" }
-    } else {
-      return { color: "bg-green-100 text-green-800 border-green-200", label: "In Stock" }
-    }
+  type InventoryItem = {
+    name: string
+    strength: string
+    stock: number
+    reorderLevel: number
+    category: string
   }
 
-  const handlePrescriptionSelect = (prescription) => {
+  const getStockStatus = (item: { stock?: number; reorderLevel?: number }) => {
+    const stock = item.stock ?? 0
+    const reorderLevel = item.reorderLevel ?? 0
+    if (stock <= reorderLevel * 0.5) {
+      return { color: "bg-red-100 text-red-800 border-red-200", label: "Critical" }
+    } else if (stock <= reorderLevel) {
+      return { color: "bg-yellow-100 text-yellow-800 border-yellow-200", label: "Low" }
+    }
+    return { color: "bg-green-100 text-green-800 border-green-200", label: "In Stock" }
+  }
+
+  const handlePrescriptionSelect = (prescription: Prescription) => {
     setSelectedPrescription(prescription)
     setActiveTab("processing")
   }
 
   const handleAddMedication = () => {
-    if (!newMedication.name || !newMedication.dosage || !newMedication.frequency || !newMedication.duration) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required medication fields",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsProcessing(true)
-
-    // Simulate processing delay
-    setTimeout(() => {
-      if (selectedPrescription) {
-        const updatedPrescription = {
-          ...selectedPrescription,
-          medications: [
-            ...selectedPrescription.medications,
-            {
-              name: newMedication.name,
-              dosage: newMedication.dosage,
-              frequency:
-                frequencyOptions.find((f) => f.value === newMedication.frequency)?.label || newMedication.frequency,
-              duration: newMedication.duration,
-              instructions: newMedication.instructions,
-            },
-          ],
-        }
-
-        setPrescriptions(prescriptions.map((p) => (p.id === selectedPrescription.id ? updatedPrescription : p)))
-
-        setSelectedPrescription(updatedPrescription)
-
-        setNewMedication({
-          name: "",
-          dosage: "",
-          frequency: "",
-          duration: "",
-          instructions: "",
-        })
-
-        toast({
-          title: "Medication Added",
-          description: `${newMedication.name} ${newMedication.dosage} has been added to the prescription`,
-        })
+    if (selectedPrescription) {
+      const newMedication = {
+        name: "New Medication",
+        dosage: "1 tablet",
+        frequency: "Once daily",
+        duration: "7 days",
+        stock: 100,
+        reorderLevel: 20,
+        strength: "500mg",
       }
 
-      setIsProcessing(false)
-      setShowMedicationDialog(false)
-    }, 800)
+      const updatedPrescription = {
+        ...selectedPrescription,
+        medications: [...selectedPrescription.medications, newMedication],
+      }
+
+      setPrescriptions(prescriptions.map((p) => (p.id === selectedPrescription.id ? updatedPrescription : p)))
+      setSelectedPrescription(updatedPrescription)
+    }
   }
 
-  const handleRemoveMedication = (index) => {
+  const handleRemoveMedication = (index: number) => {
     if (selectedPrescription) {
       const updatedMedications = [...selectedPrescription.medications]
       updatedMedications.splice(index, 1)
@@ -307,76 +325,65 @@ export default function Prescription() {
       }
 
       setPrescriptions(prescriptions.map((p) => (p.id === selectedPrescription.id ? updatedPrescription : p)))
-
       setSelectedPrescription(updatedPrescription)
-
-      toast({
-        title: "Medication Removed",
-        description: "The medication has been removed from the prescription",
-      })
     }
   }
 
   const handleMarkAsReady = () => {
     if (selectedPrescription) {
       setIsProcessing(true)
+      simulateAction("Marking prescription as ready", 1200).then(() => {
+        setTimeout(() => {
+          const updatedPrescription = {
+            ...selectedPrescription,
+            status: "ready" as const,
+          }
 
-      // Simulate processing delay
-      setTimeout(() => {
-        const updatedPrescription = {
-          ...selectedPrescription,
-          status: "ready",
-        }
+          setPrescriptions(prescriptions.map((p) => (p.id === selectedPrescription.id ? updatedPrescription : p)))
+          setSelectedPrescription(updatedPrescription)
 
-        setPrescriptions(prescriptions.map((p) => (p.id === selectedPrescription.id ? updatedPrescription : p)))
+          toast({
+            title: "Status Updated",
+            description: `Prescription ${selectedPrescription.id} is now ready for dispensing`,
+          })
 
-        setSelectedPrescription(updatedPrescription)
-
-        toast({
-          title: "Status Updated",
-          description: `Prescription ${selectedPrescription.id} is now ready for dispensing`,
-        })
-
-        setIsProcessing(false)
-      }, 800)
+          setIsProcessing(false)
+        }, 1000)
+      })
     }
   }
 
   const handleDispense = () => {
-    setShowConfirmDialog(true)
-  }
-
-  const confirmDispense = () => {
     if (selectedPrescription) {
       setIsProcessing(true)
+      simulateAction("Dispensing prescription", 1500).then(() => {
+        setTimeout(() => {
+          setPrescriptions(prescriptions.filter((p) => p.id !== selectedPrescription.id))
 
-      // Simulate processing delay
-      setTimeout(() => {
-        // Remove from prescriptions queue
-        setPrescriptions(prescriptions.filter((p) => p.id !== selectedPrescription.id))
+          const newCompletedPrescription = {
+            id: selectedPrescription.id,
+            name: selectedPrescription.name,
+            completedTime: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            medications: selectedPrescription.medications.map((m) => `${m.name} ${m.dosage}`),
+            status: "dispensed" as const,
+            age: selectedPrescription.age,
+            diagnosis: selectedPrescription.diagnosis,
+            orderTime: selectedPrescription.orderTime,
+          }
 
-        // Add to completed prescriptions
-        const newCompletedPrescription = {
-          id: selectedPrescription.id,
-          name: selectedPrescription.name,
-          completedTime: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          medications: selectedPrescription.medications.map((m) => `${m.name} ${m.dosage}`),
-          status: "dispensed",
-        }
+          setCompleted([...completed, newCompletedPrescription])
 
-        setCompleted([newCompletedPrescription, ...completed])
+          toast({
+            title: "Prescription Dispensed",
+            description: `Prescription ${selectedPrescription.id} has been successfully dispensed`,
+            variant: "success",
+          })
 
-        toast({
-          title: "Prescription Dispensed",
-          description: `Prescription ${selectedPrescription.id} has been successfully dispensed`,
-          variant: "success",
-        })
-
-        setSelectedPrescription(null)
-        setActiveTab("queue")
-        setIsProcessing(false)
-        setShowConfirmDialog(false)
-      }, 1200)
+          setIsProcessing(false)
+          setSelectedPrescription(null)
+          setActiveTab("queue")
+        }, 1000)
+      })
     }
   }
 
@@ -384,13 +391,13 @@ export default function Prescription() {
     setShowPrintDialog(true)
   }
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value)
     setIsSearching(!!e.target.value)
   }
 
-  const handleAlertClick = (item) => {
-    setAlertItem(item)
+  const handleAlertClick = (item: AlertItem | Medication) => {
+    setAlertItem(item as AlertItem)
     setShowAlertDialog(true)
   }
 
@@ -411,11 +418,23 @@ export default function Prescription() {
     }
   }
 
+  const handleAddAlert = () => {
+    const newAlert: AlertItem = {
+      id: `alert-${Date.now()}`,
+      type: "low-stock",
+      message: "Low stock alert for medication",
+      severity: "high",
+      timestamp: new Date().toISOString(),
+      category: "Pharmacy",
+    }
+    setAlertItem(newAlert)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Sidebar />
       <MobileSidebar />
-      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
+      <main className="lg:ml-64 p-3 sm:p-4 lg:p-8 pt-20 sm:pt-24 lg:pt-8">
         <div className="p-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             {/* Header with same design as Triage */}
@@ -423,25 +442,25 @@ export default function Prescription() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+              className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-6 sm:mb-8"
             >
               <div>
                 <motion.h1
-                  className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3"
                   animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                   transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
                 >
                   <motion.div
-                    className="p-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg"
+                    className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg"
                     animate={{ rotate: [0, 5, -5, 0] }}
                     transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                   >
-                    <Pill className="h-8 w-8 text-white" />
+                    <Pill className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                   </motion.div>
                   Prescription Management
                 </motion.h1>
                 <motion.p
-                  className="text-gray-600"
+                  className="text-sm sm:text-base text-gray-600"
                   animate={{ opacity: [0.7, 1, 0.7] }}
                   transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                 >
@@ -449,14 +468,14 @@ export default function Prescription() {
                 </motion.p>
               </div>
 
-              <div className="flex items-center gap-4 mt-4 lg:mt-0">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleRefresh}
                     disabled={refreshing}
-                    className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                    className="w-full sm:w-auto bg-white/80 backdrop-blur-sm hover:bg-white h-10 sm:h-9"
                   >
                     <motion.div
                       animate={refreshing ? { rotate: 360 } : {}}
@@ -470,7 +489,7 @@ export default function Prescription() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
                     variant="outline"
-                    className="bg-white/80 backdrop-blur-sm hover:bg-white group transition-all duration-200"
+                    className="w-full sm:w-auto bg-white/80 backdrop-blur-sm hover:bg-white group transition-all duration-200 h-10 sm:h-9"
                     onClick={() => {
                       setSearchTerm("")
                       toast({
@@ -485,7 +504,7 @@ export default function Prescription() {
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button
-                    className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group transition-all duration-200"
+                    className="w-full sm:w-auto bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group transition-all duration-200 h-10 sm:h-9"
                     onClick={() => {
                       toast({
                         title: "New Prescription",
@@ -502,7 +521,7 @@ export default function Prescription() {
 
             {/* Stats Cards */}
             <motion.div
-              className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -733,23 +752,25 @@ export default function Prescription() {
                                 <motion.div
                                   key={prescription.id}
                                   variants={itemVariants}
-                                  className="p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group bg-gray-50/80 hover:bg-gray-100/80"
+                                  className="p-4 sm:p-6 border rounded-lg hover:shadow-md transition-all duration-200 cursor-pointer group bg-gray-50/80 hover:bg-gray-100/80"
                                   onClick={() => handlePrescriptionSelect(prescription)}
                                   whileHover={{ scale: 1.01 }}
                                   whileTap={{ scale: 0.99 }}
                                 >
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex items-start gap-4">
-                                      <div className="w-16 h-16 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform duration-300">
+                                  <div className="flex flex-col space-y-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
+                                    <div className="flex items-start gap-3 sm:gap-4">
+                                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-lg group-hover:scale-110 transition-transform duration-300">
                                         {prescription.name
                                           .split(" ")
                                           .map((n) => n[0])
                                           .join("")}
                                       </div>
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                          <h3 className="text-lg font-semibold text-gray-900">{prescription.name}</h3>
-                                          <Badge className={getStatusColor(prescription.status)}>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                                          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                                            {prescription.name}
+                                          </h3>
+                                          <Badge className={`${getStatusColor(prescription.status)} text-xs`}>
                                             <span className="flex items-center gap-1">
                                               {prescription.status === "pending" && <Clock className="h-3 w-3" />}
                                               {prescription.status === "ready" && <CheckCircle className="h-3 w-3" />}
@@ -757,24 +778,28 @@ export default function Prescription() {
                                             </span>
                                           </Badge>
                                         </div>
-                                        <div className="grid grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-3">
                                           <p>ID: {prescription.id}</p>
                                           <p>Age: {prescription.age}</p>
                                           <p>Ordered: {prescription.orderTime}</p>
                                         </div>
                                         <div className="mb-3">
-                                          <p className="text-sm font-medium text-gray-700">
+                                          <p className="text-xs sm:text-sm font-medium text-gray-700">
                                             Diagnosis: {prescription.diagnosis}
                                           </p>
-                                          <p className="text-sm text-gray-600">Prescribed by: {prescription.doctor}</p>
+                                          <p className="text-xs sm:text-sm text-gray-600">
+                                            Prescribed by: {prescription.doctor}
+                                          </p>
                                         </div>
                                         <div>
-                                          <p className="text-sm font-medium text-gray-700 mb-2">Medications:</p>
+                                          <p className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                                            Medications:
+                                          </p>
                                           <div className="space-y-1">
                                             {prescription.medications.map((med, idx) => (
                                               <div
                                                 key={idx}
-                                                className="text-sm text-gray-600 bg-gray-50 p-2 rounded group-hover:bg-gray-100 transition-colors duration-200"
+                                                className="text-xs sm:text-sm text-gray-600 bg-gray-50 p-2 rounded group-hover:bg-gray-100 transition-colors duration-200"
                                               >
                                                 <span className="font-medium">{med.name}</span> - {med.dosage},{" "}
                                                 {med.frequency} for {med.duration}
@@ -785,10 +810,10 @@ export default function Prescription() {
                                       </div>
                                     </div>
                                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                      <Button className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group-hover:scale-105 transition-transform duration-300">
-                                        <span className="flex items-center gap-2">
+                                      <Button className="w-full sm:w-auto bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white group-hover:scale-105 transition-transform duration-300 text-xs sm:text-sm h-8 sm:h-9">
+                                        <span className="flex items-center gap-1 sm:gap-2">
                                           Process
-                                          <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
+                                          <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform duration-300" />
                                         </span>
                                       </Button>
                                     </motion.div>
@@ -814,16 +839,16 @@ export default function Prescription() {
                     <div className="space-y-6">
                       {/* Patient Header */}
                       <Card className="bg-gradient-to-r from-[#581c87]/5 to-[#312e81]/5 border-[#581c87]/20 overflow-hidden">
-                        <CardContent className="p-6">
+                        <CardContent className="p-4 sm:p-6">
                           <motion.div
-                            className="flex items-center justify-between"
+                            className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4 }}
                           >
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-3 sm:gap-4">
                               <motion.div
-                                className="w-20 h-20 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-2xl"
+                                className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-2xl"
                                 whileHover={{ scale: 1.05 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
                               >
@@ -833,22 +858,28 @@ export default function Prescription() {
                                   .join("")}
                               </motion.div>
                               <div>
-                                <h2 className="text-2xl font-bold text-gray-900">{selectedPrescription.name}</h2>
-                                <p className="text-gray-600">Patient ID: {selectedPrescription.id}</p>
-                                <p className="text-sm text-gray-500">Age: {selectedPrescription.age}</p>
-                                <p className="text-sm text-gray-500">Diagnosis: {selectedPrescription.diagnosis}</p>
+                                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                                  {selectedPrescription.name}
+                                </h2>
+                                <p className="text-sm sm:text-base text-gray-600">
+                                  Patient ID: {selectedPrescription.id}
+                                </p>
+                                <p className="text-xs sm:text-sm text-gray-500">Age: {selectedPrescription.age}</p>
+                                <p className="text-xs sm:text-sm text-gray-500">
+                                  Diagnosis: {selectedPrescription.diagnosis}
+                                </p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <Badge className={getStatusColor(selectedPrescription.status)}>
+                            <div className="text-left sm:text-right">
+                              <Badge className={`${getStatusColor(selectedPrescription.status)} text-xs`}>
                                 <span className="flex items-center gap-1">
                                   {selectedPrescription.status === "pending" && <Clock className="h-3 w-3" />}
                                   {selectedPrescription.status === "ready" && <CheckCircle className="h-3 w-3" />}
                                   {selectedPrescription.status}
                                 </span>
                               </Badge>
-                              <p className="text-sm text-gray-600 mt-2">
-                                <Clock className="h-4 w-4 inline mr-1" />
+                              <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                                <Clock className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
                                 Ordered: {selectedPrescription.orderTime}
                               </p>
                             </div>
@@ -873,7 +904,7 @@ export default function Prescription() {
                                   className="p-4 border rounded-lg hover:shadow-sm transition-all duration-200 group bg-gray-50/80 hover:bg-gray-100/80"
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                  exit={{ opacity: 0, height: 0 }}
                                   transition={{ duration: 0.3 }}
                                   layout
                                 >
@@ -1381,7 +1412,20 @@ export default function Prescription() {
                                                 <Button
                                                   size="sm"
                                                   className="h-8 px-2 text-xs bg-[#581c87] hover:bg-[#6b21a8]"
-                                                  onClick={() => handleAlertClick(item)}
+                                                  onClick={() =>
+                                                    handleAlertClick({
+                                                      id: `alert-${item.name}-${item.strength}`,
+                                                      type: "low-stock",
+                                                      message: `Low stock alert for ${item.name} ${item.strength}`,
+                                                      severity: "high",
+                                                      timestamp: new Date().toISOString(),
+                                                      category: item.category,
+                                                      name: item.name,
+                                                      strength: item.strength,
+                                                      stock: item.stock,
+                                                      reorderLevel: item.reorderLevel,
+                                                    })
+                                                  }
                                                 >
                                                   <Plus className="h-3 w-3 mr-1" />
                                                   Reorder
@@ -1514,7 +1558,7 @@ export default function Prescription() {
                 Cancel
               </Button>
               <Button
-                onClick={confirmDispense}
+                onClick={handleDispense}
                 disabled={isProcessing}
                 className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
               >
@@ -1625,6 +1669,7 @@ export default function Prescription() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <ScrollToTop />
       </main>
     </div>
   )

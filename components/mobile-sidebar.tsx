@@ -132,15 +132,45 @@ export default function MobileSidebar() {
 
   return (
     <>
-      {/* Mobile Menu Button - Positioned to overlap with Dashboard text */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-1 left-4 z-[50] bg-[#1a1a3e] backdrop-blur-md hover:bg-white/30 text-white shadow-lg border border-white/20"
-        onClick={toggleSidebar}
-      >
-        <Menu className="h-5 w-5" />
-      </Button>
+      {/* Mobile Menu Button - Sticky at top */}
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#0f0f23]/95 via-[#1a1a3e]/95 to-[#2d1b69]/95 backdrop-blur-md border-b border-white/10 lg:hidden">
+        <div className="flex items-center justify-between p-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white shadow-lg border border-white/20 h-10 w-10"
+            onClick={toggleSidebar}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="text-white text-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex items-center gap-3"
+            >
+              <motion.div
+                className="w-9 h-9 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              >
+                <Sparkles className="w-6 h-6 text-white" />
+              </motion.div>
+              <div>
+                <motion.h1
+                  className="text-xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent"
+                  animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
+                >
+                  PalmCareConnect
+                </motion.h1>
+              </div>
+            </motion.div>
+          </div>
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
+      </div>
 
       {/* Overlay */}
       <AnimatePresence>
@@ -164,13 +194,13 @@ export default function MobileSidebar() {
             animate="open"
             exit="closed"
             variants={sidebarVariants}
-            className="bg-gradient-to-b from-[#0f0f23] via-[#1a1a3e] to-[#2d1b69] text-white flex flex-col fixed left-0 top-0 h-screen z-[9999] shadow-2xl overflow-hidden w-[75%] sm:w-[60%] md:w-[50%]"
+            className="bg-gradient-to-b from-[#0f0f23] via-[#1a1a3e] to-[#2d1b69] text-white flex flex-col fixed left-0 top-0 h-screen z-[9999] shadow-2xl overflow-hidden w-[85%] sm:w-[70%] md:w-[60%]"
           >
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
               {/* Gradient Orbs */}
               <motion.div
-                className="absolute top-10 left-1/2 w-24 h-24 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-xl"
+                className="absolute top-10 left-1/2 w-32 h-32 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-xl"
                 animate={{
                   scale: [1, 1.3, 1],
                   opacity: [0.3, 0.6, 0.3],
@@ -183,7 +213,7 @@ export default function MobileSidebar() {
                 }}
               />
               <motion.div
-                className="absolute bottom-20 right-2 w-20 h-20 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-xl"
+                className="absolute bottom-20 right-2 w-24 h-24 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-xl"
                 animate={{
                   scale: [1.2, 1, 1.2],
                   opacity: [0.4, 0.7, 0.4],
@@ -221,7 +251,7 @@ export default function MobileSidebar() {
             </div>
 
             {/* Header */}
-            <div className="p-4 border-b border-white/10 relative z-10">
+            <div className="p-6 border-b border-white/10 relative z-10">
               <div className="flex items-center justify-between">
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
@@ -230,15 +260,15 @@ export default function MobileSidebar() {
                   className="flex items-center gap-3"
                 >
                   <motion.div
-                    className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"
+                    className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
                   >
-                    <Sparkles className="w-6 h-6 text-white" />
+                    <Sparkles className="w-7 h-7 text-white" />
                   </motion.div>
                   <div>
                     <motion.h1
-                      className="text-xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent"
+                      className="text-x font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent"
                       animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                       transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                     >
@@ -259,16 +289,16 @@ export default function MobileSidebar() {
                     variant="ghost"
                     size="sm"
                     onClick={closeSidebar}
-                    className="text-white hover:bg-white/20 p-2 rounded-xl bg-white/10"
+                    className="text-white hover:bg-white/20 p-3 rounded-xl bg-white/10 h-10 w-10"
                   >
-                    <X size={18} />
+                    <X size={20} />
                   </Button>
                 </motion.div>
               </div>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-2 relative z-10 overflow-y-auto">
+            <nav className="flex-1 p-4 space-y-3 relative z-10 overflow-y-auto">
               {menuItems.map((item, index) => {
                 const isActive = pathname === item.href
                 return (
@@ -283,7 +313,7 @@ export default function MobileSidebar() {
                   >
                     <Link href={item.href} onClick={closeSidebar}>
                       <motion.div
-                        className={`relative flex items-center gap-3 p-3 rounded-xl transition-all duration-300 group ${
+                        className={`relative flex items-center gap-4 p-4 rounded-xl transition-all duration-300 group ${
                           isActive ? "bg-white/20 shadow-lg backdrop-blur-sm" : "hover:bg-white/10"
                         }`}
                         whileHover={{ scale: 1.02, x: 5 }}
@@ -302,14 +332,14 @@ export default function MobileSidebar() {
                         <motion.div
                           variants={iconVariants}
                           animate={isActive ? "active" : hoveredItem === item.href ? "hover" : "rest"}
-                          className={`p-2 rounded-lg bg-gradient-to-r ${item.color} shadow-lg`}
+                          className={`p-3 rounded-lg bg-gradient-to-r ${item.color} shadow-lg`}
                         >
-                          <item.icon className="h-5 w-5 text-white" />
+                          <item.icon className="h-6 w-6 text-white" />
                         </motion.div>
 
                         {/* Label */}
                         <motion.span
-                          className={`font-medium truncate ${
+                          className={`font-medium text-base ${
                             isActive ? "text-white" : "text-white/90 group-hover:text-white"
                           }`}
                         >
@@ -330,7 +360,7 @@ export default function MobileSidebar() {
                         {/* Sparkle Effect for Active Item */}
                         {isActive && (
                           <motion.div
-                            className="absolute top-1 right-1"
+                            className="absolute top-2 right-2"
                             animate={{
                               scale: [1, 1.2, 1],
                               opacity: [0.5, 1, 0.5],
@@ -341,7 +371,7 @@ export default function MobileSidebar() {
                               ease: "easeInOut",
                             }}
                           >
-                            <Zap className="w-3 h-3 text-yellow-300" />
+                            <Zap className="w-4 h-4 text-yellow-300" />
                           </motion.div>
                         )}
                       </motion.div>
@@ -352,28 +382,28 @@ export default function MobileSidebar() {
             </nav>
 
             {/* Footer */}
-            <div className="p-4 border-t border-white/10 relative z-10">
+            <div className="p-6 border-t border-white/10 relative z-10">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   variant="ghost"
-                  className="w-full text-white hover:bg-white/10 rounded-xl transition-all duration-300 px-4"
+                  className="w-full text-white hover:bg-white/10 rounded-xl transition-all duration-300 px-4 py-3 h-auto"
                   onClick={() => (window.location.href = "/")}
                 >
                   <motion.div
-                    className="p-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 shadow-lg"
+                    className="p-3 rounded-lg bg-gradient-to-r from-red-500 to-red-600 shadow-lg"
                     whileHover={{ scale: 1.1 }}
                     transition={{ duration: 0.6 }}
                   >
-                    <LogOut className="h-4 w-4 text-white" />
+                    <LogOut className="h-5 w-5 text-white" />
                   </motion.div>
-                  <motion.span className="ml-3 font-medium">Logout</motion.span>
+                  <motion.span className="ml-3 font-medium text-base">Logout</motion.span>
                 </Button>
               </motion.div>
 
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-xs text-white/50 mt-4 text-center"
+                className="text-sm text-white/50 mt-4 text-center"
               >
                 © 2025 PalmCareConnect
               </motion.p>

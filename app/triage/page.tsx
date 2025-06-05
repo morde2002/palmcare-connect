@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import Sidebar from "@/components/sidebar"
 import MobileSidebar from "@/components/mobile-sidebar"
+import ScrollToTop from "@/components/scroll-to-top"
 
 export default function Triage() {
   const [activeTab, setActiveTab] = useState("queue")
@@ -150,13 +151,13 @@ export default function Triage() {
   const getPriorityIcon = (priority) => {
     switch (priority) {
       case "high":
-        return <AlertTriangle className="h-4 w-4" />
+        return <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
       case "medium":
-        return <AlertCircle className="h-4 w-4" />
+        return <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />
       case "low":
-        return <CheckCircle className="h-4 w-4" />
+        return <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
       default:
-        return <Clock className="h-4 w-4" />
+        return <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
     }
   }
 
@@ -198,32 +199,34 @@ export default function Triage() {
       {/* Include both sidebars */}
       <Sidebar />
       <MobileSidebar />
+      <ScrollToTop />
+
       {/* Main Content - Responsive padding for both mobile and desktop */}
-      <div className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
+      <div className="lg:ml-64 pt-20 lg:pt-8 px-3 sm:px-4 lg:px-8 pb-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+          className="flex flex-col space-y-4 mb-6 sm:mb-8"
         >
-          <div>
+          <div className="text-center lg:text-left">
             <motion.h1
-              className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center justify-center lg:justify-start gap-2 sm:gap-3"
               animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
               transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
             >
               <motion.div
-                className="p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 shadow-lg"
+                className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 shadow-lg"
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
               >
-                <Activity className="h-8 w-8 text-white" />
+                <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </motion.div>
               Triage
             </motion.h1>
             <motion.p
-              className="text-gray-600"
+              className="text-sm sm:text-base text-gray-600"
               animate={{ opacity: [0.7, 1, 0.7] }}
               transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
             >
@@ -231,14 +234,14 @@ export default function Triage() {
             </motion.p>
           </div>
 
-          <div className="flex items-center gap-4 mt-4 lg:mt-0">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                className="w-full sm:w-auto bg-white/80 backdrop-blur-sm hover:bg-white text-sm sm:text-base"
               >
                 <motion.div
                   animate={refreshing ? { rotate: 360 } : {}}
@@ -253,7 +256,7 @@ export default function Triage() {
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.title}
@@ -263,12 +266,12 @@ export default function Triage() {
               whileHover={{ scale: 1.02, y: -5 }}
             >
               <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardContent className="p-6">
+                <CardContent className="p-3 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
                       <motion.p
-                        className="text-3xl font-bold text-gray-900"
+                        className="text-xl sm:text-3xl font-bold text-gray-900"
                         animate={{ scale: [1, 1.05, 1] }}
                         transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                       >
@@ -276,11 +279,11 @@ export default function Triage() {
                       </motion.p>
                     </div>
                     <motion.div
-                      className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg`}
+                      className={`p-2 sm:p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg`}
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <stat.icon className="h-6 w-6 text-white" />
+                      <stat.icon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                     </motion.div>
                   </div>
                 </CardContent>
@@ -296,40 +299,49 @@ export default function Triage() {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 bg-gray-100">
-                  <TabsTrigger value="queue" className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <span className="hidden sm:inline">Patient Queue</span>
-                    <span className="sm:hidden">Queue</span>
+                <TabsList className="grid w-full grid-cols-3 bg-gray-100 h-auto">
+                  <TabsTrigger
+                    value="queue"
+                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3"
+                  >
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">Patient Queue</span>
+                    <span className="xs:hidden">Queue</span>
                   </TabsTrigger>
-                  <TabsTrigger value="assessment" className="flex items-center gap-2">
-                    <Stethoscope className="h-4 w-4" />
-                    <span className="hidden sm:inline">Assessment</span>
-                    <span className="sm:hidden">Assess</span>
+                  <TabsTrigger
+                    value="assessment"
+                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3"
+                  >
+                    <Stethoscope className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">Assessment</span>
+                    <span className="xs:hidden">Assess</span>
                   </TabsTrigger>
-                  <TabsTrigger value="completed" className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" />
-                    <span className="hidden sm:inline">Completed</span>
-                    <span className="sm:hidden">Done</span>
+                  <TabsTrigger
+                    value="completed"
+                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-3"
+                  >
+                    <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">Completed</span>
+                    <span className="xs:hidden">Done</span>
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="queue" className="mt-6">
+                <TabsContent value="queue" className="mt-4 sm:mt-6">
                   {/* Search and Filter */}
-                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:gap-4 mb-4 sm:mb-6">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input
                         placeholder="Search patients..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 bg-white/80 backdrop-blur-sm"
+                        className="pl-10 bg-white/80 backdrop-blur-sm text-sm sm:text-base h-10 sm:h-auto"
                       />
                     </div>
                     <Select value={filterPriority} onValueChange={setFilterPriority}>
-                      <SelectTrigger className="w-full sm:w-[180px] bg-white/80 backdrop-blur-sm">
+                      <SelectTrigger className="w-full sm:w-[180px] bg-white/80 backdrop-blur-sm text-sm sm:text-base h-10 sm:h-auto">
                         <Filter className="h-4 w-4 mr-2" />
                         <SelectValue placeholder="Filter by priority" />
                       </SelectTrigger>
@@ -343,7 +355,7 @@ export default function Triage() {
                   </div>
 
                   {/* Patient List */}
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <AnimatePresence>
                       {filteredPatients
                         .filter((p) => p.status === "waiting")
@@ -355,66 +367,70 @@ export default function Triage() {
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ duration: 0.3, delay: index * 0.1 }}
                             whileHover={{ scale: 1.01, y: -2 }}
-                            className="p-6 rounded-lg bg-gray-50/80 hover:bg-gray-100/80 transition-all duration-300 border border-gray-200"
+                            className="p-4 sm:p-6 rounded-lg bg-gray-50/80 hover:bg-gray-100/80 transition-all duration-300 border border-gray-200"
                           >
-                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                            <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 gap-4">
                               <div className="flex-1">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
-                                  <h3 className="text-lg font-semibold text-gray-900">{patient.name}</h3>
-                                  <div className="flex items-center gap-2">
+                                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">{patient.name}</h3>
+                                  <div className="flex items-center gap-2 flex-wrap">
                                     <Badge className={getPriorityColor(patient.priority)}>
                                       {getPriorityIcon(patient.priority)}
-                                      <span className="ml-1 capitalize">{patient.priority}</span>
+                                      <span className="ml-1 capitalize text-xs sm:text-sm">{patient.priority}</span>
                                     </Badge>
                                     <Badge variant="outline" className="bg-white/80">
                                       <Clock className="h-3 w-3 mr-1" />
-                                      {patient.waitTime}
+                                      <span className="text-xs sm:text-sm">{patient.waitTime}</span>
                                     </Badge>
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
                                   <div>
-                                    <p className="text-sm text-gray-600">Age/Gender</p>
-                                    <p className="font-medium">
+                                    <p className="text-xs sm:text-sm text-gray-600">Age/Gender</p>
+                                    <p className="font-medium text-sm sm:text-base">
                                       {patient.age} / {patient.gender}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-sm text-gray-600">Arrival Time</p>
-                                    <p className="font-medium">{patient.arrivalTime}</p>
+                                    <p className="text-xs sm:text-sm text-gray-600">Arrival Time</p>
+                                    <p className="font-medium text-sm sm:text-base">{patient.arrivalTime}</p>
                                   </div>
                                   <div className="sm:col-span-2">
-                                    <p className="text-sm text-gray-600">Chief Complaint</p>
-                                    <p className="font-medium">{patient.chiefComplaint}</p>
+                                    <p className="text-xs sm:text-sm text-gray-600">Chief Complaint</p>
+                                    <p className="font-medium text-sm sm:text-base">{patient.chiefComplaint}</p>
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 text-xs sm:text-sm">
                                   <div className="flex items-center gap-2">
-                                    <Heart className="h-4 w-4 text-red-500" />
+                                    <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
                                     <span>BP: {patient.vitals.bp}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Activity className="h-4 w-4 text-blue-500" />
+                                    <Activity className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500" />
                                     <span>HR: {patient.vitals.hr}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Thermometer className="h-4 w-4 text-orange-500" />
+                                    <Thermometer className="h-3 w-3 sm:h-4 sm:w-4 text-orange-500" />
                                     <span>Temp: {patient.vitals.temp}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Zap className="h-4 w-4 text-green-500" />
+                                    <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
                                     <span>SpO2: {patient.vitals.spo2}</span>
                                   </div>
                                 </div>
                               </div>
 
                               <div className="flex flex-col sm:flex-row gap-2">
-                                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <motion.div
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  className="w-full sm:w-auto"
+                                >
                                   <Button
                                     onClick={() => handleAssessment(patient.id)}
-                                    className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg"
+                                    className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg text-sm sm:text-base"
                                   >
                                     <Stethoscope className="h-4 w-4 mr-2" />
                                     Assess
@@ -427,26 +443,32 @@ export default function Triage() {
                     </AnimatePresence>
 
                     {filteredPatients.filter((p) => p.status === "waiting").length === 0 && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">No patients in queue matching your criteria</p>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-8 sm:py-12"
+                      >
+                        <Users className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-sm sm:text-base text-gray-600">
+                          No patients in queue matching your criteria
+                        </p>
                       </motion.div>
                     )}
                   </div>
                 </TabsContent>
 
-                <TabsContent value="assessment" className="mt-6">
+                <TabsContent value="assessment" className="mt-4 sm:mt-6">
                   {selectedPatient ? (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5 }}
-                      className="space-y-6"
+                      className="space-y-4 sm:space-y-6"
                     >
                       {/* Patient Info Header */}
-                      <div className="p-6 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-                        <h3 className="text-xl font-bold mb-2">Assessing: {selectedPatient.name}</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                      <div className="p-4 sm:p-6 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                        <h3 className="text-lg sm:text-xl font-bold mb-2">Assessing: {selectedPatient.name}</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
                           <div>Age: {selectedPatient.age}</div>
                           <div>Gender: {selectedPatient.gender}</div>
                           <div>Arrival: {selectedPatient.arrivalTime}</div>
@@ -454,27 +476,32 @@ export default function Triage() {
                       </div>
 
                       {/* Assessment Form */}
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                         {/* Left Column */}
-                        <div className="space-y-6">
+                        <div className="space-y-4 sm:space-y-6">
                           <div>
-                            <Label htmlFor="chiefComplaint">Chief Complaint</Label>
+                            <Label htmlFor="chiefComplaint" className="text-sm sm:text-base">
+                              Chief Complaint
+                            </Label>
                             <Textarea
                               id="chiefComplaint"
                               value={assessmentData.chiefComplaint}
                               onChange={(e) => setAssessmentData({ ...assessmentData, chiefComplaint: e.target.value })}
                               placeholder="Patient's primary concern..."
-                              className="bg-white/80 backdrop-blur-sm"
+                              className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-2"
+                              rows={3}
                             />
                           </div>
 
                           <div>
-                            <Label htmlFor="painScale">Pain Scale (0-10)</Label>
+                            <Label htmlFor="painScale" className="text-sm sm:text-base">
+                              Pain Scale (0-10)
+                            </Label>
                             <Select
                               value={assessmentData.painScale}
                               onValueChange={(value) => setAssessmentData({ ...assessmentData, painScale: value })}
                             >
-                              <SelectTrigger className="bg-white/80 backdrop-blur-sm">
+                              <SelectTrigger className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-2">
                                 <SelectValue placeholder="Select pain level" />
                               </SelectTrigger>
                               <SelectContent>
@@ -488,35 +515,40 @@ export default function Triage() {
                           </div>
 
                           <div>
-                            <Label htmlFor="symptoms">Current Symptoms</Label>
+                            <Label htmlFor="symptoms" className="text-sm sm:text-base">
+                              Current Symptoms
+                            </Label>
                             <Textarea
                               id="symptoms"
                               value={assessmentData.symptoms}
                               onChange={(e) => setAssessmentData({ ...assessmentData, symptoms: e.target.value })}
                               placeholder="List all current symptoms..."
-                              className="bg-white/80 backdrop-blur-sm"
+                              className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-2"
+                              rows={3}
                             />
                           </div>
 
                           <div>
-                            <Label htmlFor="allergies">Known Allergies</Label>
+                            <Label htmlFor="allergies" className="text-sm sm:text-base">
+                              Known Allergies
+                            </Label>
                             <Input
                               id="allergies"
                               value={assessmentData.allergies}
                               onChange={(e) => setAssessmentData({ ...assessmentData, allergies: e.target.value })}
                               placeholder="List any known allergies..."
-                              className="bg-white/80 backdrop-blur-sm"
+                              className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-2"
                             />
                           </div>
                         </div>
 
                         {/* Right Column */}
-                        <div className="space-y-6">
+                        <div className="space-y-4 sm:space-y-6">
                           <div>
-                            <Label>Vital Signs</Label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                            <Label className="text-sm sm:text-base">Vital Signs</Label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
                               <div>
-                                <Label htmlFor="bp" className="text-sm">
+                                <Label htmlFor="bp" className="text-xs sm:text-sm">
                                   Blood Pressure
                                 </Label>
                                 <Input
@@ -529,11 +561,11 @@ export default function Triage() {
                                     })
                                   }
                                   placeholder="120/80"
-                                  className="bg-white/80 backdrop-blur-sm"
+                                  className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-1"
                                 />
                               </div>
                               <div>
-                                <Label htmlFor="hr" className="text-sm">
+                                <Label htmlFor="hr" className="text-xs sm:text-sm">
                                   Heart Rate
                                 </Label>
                                 <Input
@@ -546,11 +578,11 @@ export default function Triage() {
                                     })
                                   }
                                   placeholder="72 bpm"
-                                  className="bg-white/80 backdrop-blur-sm"
+                                  className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-1"
                                 />
                               </div>
                               <div>
-                                <Label htmlFor="temp" className="text-sm">
+                                <Label htmlFor="temp" className="text-xs sm:text-sm">
                                   Temperature
                                 </Label>
                                 <Input
@@ -563,11 +595,11 @@ export default function Triage() {
                                     })
                                   }
                                   placeholder="98.6°F"
-                                  className="bg-white/80 backdrop-blur-sm"
+                                  className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-1"
                                 />
                               </div>
                               <div>
-                                <Label htmlFor="spo2" className="text-sm">
+                                <Label htmlFor="spo2" className="text-xs sm:text-sm">
                                   Oxygen Saturation
                                 </Label>
                                 <Input
@@ -580,19 +612,21 @@ export default function Triage() {
                                     })
                                   }
                                   placeholder="98%"
-                                  className="bg-white/80 backdrop-blur-sm"
+                                  className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-1"
                                 />
                               </div>
                             </div>
                           </div>
 
                           <div>
-                            <Label htmlFor="priority">Priority Level</Label>
+                            <Label htmlFor="priority" className="text-sm sm:text-base">
+                              Priority Level
+                            </Label>
                             <Select
                               value={assessmentData.priority}
                               onValueChange={(value) => setAssessmentData({ ...assessmentData, priority: value })}
                             >
-                              <SelectTrigger className="bg-white/80 backdrop-blur-sm">
+                              <SelectTrigger className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-2">
                                 <SelectValue placeholder="Assign priority level" />
                               </SelectTrigger>
                               <SelectContent>
@@ -604,13 +638,15 @@ export default function Triage() {
                           </div>
 
                           <div>
-                            <Label htmlFor="notes">Assessment Notes</Label>
+                            <Label htmlFor="notes" className="text-sm sm:text-base">
+                              Assessment Notes
+                            </Label>
                             <Textarea
                               id="notes"
                               value={assessmentData.notes}
                               onChange={(e) => setAssessmentData({ ...assessmentData, notes: e.target.value })}
                               placeholder="Additional notes and observations..."
-                              className="bg-white/80 backdrop-blur-sm"
+                              className="bg-white/80 backdrop-blur-sm text-sm sm:text-base mt-2"
                               rows={4}
                             />
                           </div>
@@ -618,11 +654,11 @@ export default function Triage() {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+                      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4 sm:pt-6 border-t">
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
                           <Button
                             onClick={handleCompleteAssessment}
-                            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg"
+                            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg text-sm sm:text-base"
                             disabled={!assessmentData.priority}
                           >
                             <CheckCircle className="h-4 w-4 mr-2" />
@@ -636,7 +672,7 @@ export default function Triage() {
                               setSelectedPatient(null)
                               setActiveTab("queue")
                             }}
-                            className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                            className="w-full sm:w-auto bg-white/80 backdrop-blur-sm hover:bg-white text-sm sm:text-base"
                           >
                             <XCircle className="h-4 w-4 mr-2" />
                             Cancel
@@ -645,15 +681,17 @@ export default function Triage() {
                       </div>
                     </motion.div>
                   ) : (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-                      <Stethoscope className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">Select a patient from the queue to begin assessment</p>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-8 sm:py-12">
+                      <Stethoscope className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-sm sm:text-base text-gray-600">
+                        Select a patient from the queue to begin assessment
+                      </p>
                     </motion.div>
                   )}
                 </TabsContent>
 
-                <TabsContent value="completed" className="mt-6">
-                  <div className="space-y-4">
+                <TabsContent value="completed" className="mt-4 sm:mt-6">
+                  <div className="space-y-3 sm:space-y-4">
                     <AnimatePresence>
                       {patients
                         .filter((p) => p.status === "assessed")
@@ -664,38 +702,38 @@ export default function Triage() {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
                             transition={{ duration: 0.3, delay: index * 0.1 }}
-                            className="p-6 rounded-lg bg-green-50/80 border border-green-200"
+                            className="p-4 sm:p-6 rounded-lg bg-green-50/80 border border-green-200"
                           >
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                               <div className="flex-1">
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
-                                  <h3 className="text-lg font-semibold text-gray-900">{patient.name}</h3>
-                                  <div className="flex items-center gap-2">
+                                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">{patient.name}</h3>
+                                  <div className="flex items-center gap-2 flex-wrap">
                                     <Badge className={getPriorityColor(patient.priority)}>
                                       {getPriorityIcon(patient.priority)}
-                                      <span className="ml-1 capitalize">{patient.priority}</span>
+                                      <span className="ml-1 capitalize text-xs sm:text-sm">{patient.priority}</span>
                                     </Badge>
                                     <Badge className="bg-green-500 text-white">
                                       <CheckCircle className="h-3 w-3 mr-1" />
-                                      Assessed
+                                      <span className="text-xs sm:text-sm">Assessed</span>
                                     </Badge>
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                                   <div>
-                                    <p className="text-sm text-gray-600">Age/Gender</p>
-                                    <p className="font-medium">
+                                    <p className="text-xs sm:text-sm text-gray-600">Age/Gender</p>
+                                    <p className="font-medium text-sm sm:text-base">
                                       {patient.age} / {patient.gender}
                                     </p>
                                   </div>
                                   <div>
-                                    <p className="text-sm text-gray-600">Assessment Time</p>
-                                    <p className="font-medium">{patient.arrivalTime}</p>
+                                    <p className="text-xs sm:text-sm text-gray-600">Assessment Time</p>
+                                    <p className="font-medium text-sm sm:text-base">{patient.arrivalTime}</p>
                                   </div>
                                   <div>
-                                    <p className="text-sm text-gray-600">Chief Complaint</p>
-                                    <p className="font-medium">{patient.chiefComplaint}</p>
+                                    <p className="text-xs sm:text-sm text-gray-600">Chief Complaint</p>
+                                    <p className="font-medium text-sm sm:text-base">{patient.chiefComplaint}</p>
                                   </div>
                                 </div>
                               </div>
@@ -705,7 +743,7 @@ export default function Triage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                                    className="bg-white/80 backdrop-blur-sm hover:bg-white text-xs sm:text-sm"
                                   >
                                     View Details
                                   </Button>
@@ -717,9 +755,13 @@ export default function Triage() {
                     </AnimatePresence>
 
                     {patients.filter((p) => p.status === "assessed").length === 0 && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-                        <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">No completed assessments today</p>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-8 sm:py-12"
+                      >
+                        <CheckCircle className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-sm sm:text-base text-gray-600">No completed assessments today</p>
                       </motion.div>
                     )}
                   </div>

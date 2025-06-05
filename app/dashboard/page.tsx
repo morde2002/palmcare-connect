@@ -17,6 +17,7 @@ import {
   Stethoscope,
   FlaskConical,
   Pill,
+  LayoutDashboard,
 } from "lucide-react"
 import Sidebar from "@/components/sidebar"
 import MobileSidebar from "@/components/mobile-sidebar"
@@ -360,60 +361,71 @@ export default function Dashboard() {
       <Sidebar />
       <MobileSidebar />
 
-      <main className="flex-1 lg:ml-64 min-h-screen overflow-y-auto">
-        <div className="p-4 lg:p-6 pt-16 lg:pt-6">
+      <main className="lg:ml-64 p-3 sm:p-4 lg:p-8 pt-20 sm:pt-24 lg:pt-8">
+        <div className="p-6">
           <motion.div variants={containerVariants} initial="hidden" animate="visible">
             {/* Header */}
-            <motion.div variants={itemVariants} className="flex justify-between items-center mb-6 lg:mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-6 sm:mb-8"
+            >
               <div>
                 <motion.h1
-                  className="text-2xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-purple-800 to-blue-800 bg-clip-text text-transparent"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3"
                   animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                   transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
                 >
+                  <motion.div
+                    className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg"
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                  >
+                    <LayoutDashboard className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                  </motion.div>
                   Dashboard
                 </motion.h1>
                 <motion.p
-                  className="text-gray-600 mt-1 text-sm lg:text-base"
+                  className="text-sm sm:text-base text-gray-600"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
                 >
                   {formattedDate}
                 </motion.p>
+                
               </div>
+              {/* User Info & Time Display */}
+              <motion.div className="text-right">
+                <motion.p
+                  className="text-xs sm:text-sm md:text-base lg:text-lg font-medium bg-gradient-to-r from-[#581c87] to-[#7c3aed] bg-clip-text text-transparent"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Welcome back {userInfo.role} {userInfo.name}
+                </motion.p>
 
-              <div className="flex items-center gap-4">
-                {/* User Info & Time Display */}
-                <motion.div className="text-right">
+                {mounted && (
                   <motion.p
-                    className="text-sm font-medium bg-gradient-to-r from-[#581c87] to-[#7c3aed] bg-clip-text text-transparent"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
+                    className="text-lg font-bold bg-gradient-to-r from-[#581c87] to-[#7c3aed] bg-clip-text text-transparent"
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300 }}
                   >
-                    Welcome back {userInfo.role} {userInfo.name}
+                    {currentTime}
                   </motion.p>
-                  {mounted && (
-                    <motion.p
-                      className="text-lg font-bold bg-gradient-to-r from-[#581c87] to-[#7c3aed] bg-clip-text text-transparent"
-                      initial={{ scale: 1.1 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      {currentTime}
-                    </motion.p>
-                  )}
-                </motion.div>
-              </div>
+                )}
+              </motion.div>
             </motion.div>
 
             {/* Stats Cards */}
             <motion.div
               variants={itemVariants}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8"
             >
-              {statsData.map((stat, index) => (
+              {statsData.map((stat) => (
                 <motion.div
                   key={stat.title}
                   variants={itemVariants}
@@ -425,13 +437,18 @@ export default function Dashboard() {
                   className="group"
                 >
                   <Card className="relative overflow-hidden hover:shadow-2xl transition-all duration-500 transform perspective-1000 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                    <CardContent className="p-4 lg:p-6 relative z-10">
+                    <CardContent className="p-3 sm:p-4 lg:p-6 relative z-10">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
+                          {/* Title */}
+                          <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                            {stat.title}
+                          </p>
+
+                          {/* Value + Trend */}
                           <div className="flex items-center gap-2">
                             <motion.p
-                              className="text-2xl lg:text-3xl font-bold text-gray-900"
+                              className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900"
                               key={stat.value}
                               initial={{ scale: 1.2, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
@@ -440,7 +457,7 @@ export default function Dashboard() {
                               {stat.value}
                             </motion.p>
                             <motion.div
-                              className={`flex items-center text-xs font-medium ${
+                              className={`flex items-center text-xs sm:text-sm font-medium ${
                                 stat.trend === "up" ? "text-green-600" : "text-red-600"
                               }`}
                               initial={{ x: -10, opacity: 0 }}
@@ -448,23 +465,27 @@ export default function Dashboard() {
                               transition={{ delay: 0.2 }}
                             >
                               {stat.trend === "up" ? (
-                                <ArrowUp className="w-3 h-3 mr-1" />
+                                <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                               ) : (
-                                <ArrowDown className="w-3 h-3 mr-1" />
+                                <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                               )}
                               {Math.abs(stat.change)}
                             </motion.div>
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">{stat.subtitle}</p>
+
+                          {/* Subtitle */}
+                          <p className="text-[10px] sm:text-xs text-gray-500 mt-1">
+                            {stat.subtitle}
+                          </p>
                         </div>
+
+                        {/* Icon */}
                         <motion.div
-                          className={`p-3 rounded-2xl bg-gradient-to-r ${stat.color} shadow-lg`}
-                          whileHover={{
-                            scale: 1.1,
-                          }}
+                          className={`p-2 sm:p-3 rounded-2xl bg-gradient-to-r ${stat.color} shadow-lg`}
+                          whileHover={{ scale: 1.1 }}
                           transition={{ duration: 0.6 }}
                         >
-                          <stat.icon className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
+                          <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
                         </motion.div>
                       </div>
                     </CardContent>
@@ -472,6 +493,7 @@ export default function Dashboard() {
                 </motion.div>
               ))}
             </motion.div>
+
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">

@@ -14,8 +14,27 @@ import MobileSidebar from "@/components/mobile-sidebar"
 import { PageTransition } from "@/components/page-transition"
 import { useAppContext } from "@/components/app-context"
 import { NotificationPanel } from "@/components/notification-panel"
+import ScrollToTop from "@/components/scroll-to-top"
 
-const queueData = {
+interface Patient {
+  id: string
+  name: string
+  waitTime: number
+  priority: "high" | "medium" | "low"
+  status: "waiting" | "in-progress" | "completed"
+  department: string
+}
+
+interface QueueState {
+  triage: Patient[]
+  consultation: Patient[]
+  laboratory: Patient[]
+  pharmacy: Patient[]
+}
+
+type QueueType = keyof QueueState
+
+const queueData: QueueState = {
   triage: [
     { id: "P-1234", name: "John Doe", waitTime: 14, priority: "high", status: "waiting", department: "General" },
     { id: "P-1235", name: "Jane Smith", waitTime: 22, priority: "medium", status: "waiting", department: "Pediatrics" },
@@ -71,7 +90,7 @@ export default function Queue() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedDepartment, setSelectedDepartment] = useState("All Departments")
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [queue, setQueue] = useState(queueData)
+  const [queue, setQueue] = useState<QueueState>(queueData)
   const [refreshing, setRefreshing] = useState(false)
   const { simulateAction } = useAppContext()
 
@@ -81,13 +100,11 @@ export default function Queue() {
     setRefreshing(false)
   }
 
-  const handleMoveToNext = (patient, currentQueue) => {
+  const handleMoveToNext = (patient: Patient, currentQueue: QueueType) => {
     simulateAction(`Moving ${patient.name} to next stage`, 800).then(() => {
-      // Remove from current queue
       const updatedCurrentQueue = queue[currentQueue].filter((p) => p.id !== patient.id)
 
-      // Determine next queue based on current queue
-      let nextQueue
+      let nextQueue: QueueType | null = null
       switch (currentQueue) {
         case "triage":
           nextQueue = "consultation"
@@ -102,7 +119,6 @@ export default function Queue() {
           nextQueue = null
       }
 
-      // Add to next queue if there is one
       if (nextQueue) {
         const updatedNextQueue = [...queue[nextQueue], { ...patient, status: "waiting", waitTime: 0 }]
         setQueue({
@@ -111,7 +127,6 @@ export default function Queue() {
           [nextQueue]: updatedNextQueue,
         })
       } else {
-        // If pharmacy (last stage), just remove from queue
         setQueue({
           ...queue,
           [currentQueue]: updatedCurrentQueue,
@@ -120,7 +135,7 @@ export default function Queue() {
     })
   }
 
-  const handleRemoveFromQueue = (patient, currentQueue) => {
+  const handleRemoveFromQueue = (patient: Patient, currentQueue: QueueType) => {
     simulateAction(`Removing ${patient.name} from queue`, 600).then(() => {
       const updatedQueue = queue[currentQueue].filter((p) => p.id !== patient.id)
       setQueue({
@@ -130,7 +145,7 @@ export default function Queue() {
     })
   }
 
-  const handleStartService = (patient, currentQueue) => {
+  const handleStartService = (patient: Patient, currentQueue: QueueType) => {
     simulateAction(`Starting service for ${patient.name}`, 600).then(() => {
       const updatedQueue = queue[currentQueue].map((p) => {
         if (p.id === patient.id) {
@@ -145,7 +160,7 @@ export default function Queue() {
     })
   }
 
-  const filteredQueue = (queueType) => {
+  const filteredQueue = (queueType: QueueType) => {
     return queue[queueType].filter((patient) => {
       const matchesSearch =
         patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -155,7 +170,7 @@ export default function Queue() {
     })
   }
 
-  const getPriorityColor = (priority) => {
+  const getPriorityColor = (priority: Patient["priority"]) => {
     switch (priority) {
       case "high":
         return "bg-red-100 text-red-800 border-red-200"
@@ -168,7 +183,7 @@ export default function Queue() {
     }
   }
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: Patient["status"]) => {
     switch (status) {
       case "in-progress":
         return "bg-blue-100 text-blue-800 border-blue-200"
@@ -206,7 +221,7 @@ export default function Queue() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <Sidebar />
       <MobileSidebar />
 
       {/* Mobile Overlay */}
@@ -222,7 +237,7 @@ export default function Queue() {
         )}
       </AnimatePresence>
 
-      <main className="lg:ml-64 p-4 lg:p-8 pt-16 lg:pt-8">
+      <main className="lg:ml-64 p-3 sm:p-4 lg:p-8 pt-20 sm:pt-24 lg:pt-8">
         <PageTransition>
           <div className="p-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -231,25 +246,25 @@ export default function Queue() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8"
+                className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 mb-6 sm:mb-8"
               >
                 <div>
                   <motion.h1
-                    className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3"
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3"
                     animate={{ backgroundPosition: ["0%", "100%", "0%"] }}
                     transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY }}
                   >
                     <motion.div
-                      className="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-lg"
+                      className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-lg"
                       animate={{ rotate: [0, 5, -5, 0] }}
                       transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                     >
-                      <Users className="h-8 w-8 text-white" />
+                      <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                     </motion.div>
                     Patient Queue
                   </motion.h1>
                   <motion.p
-                    className="text-gray-600"
+                    className="text-sm sm:text-base text-gray-600"
                     animate={{ opacity: [0.7, 1, 0.7] }}
                     transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
                   >
@@ -257,12 +272,12 @@ export default function Queue() {
                   </motion.p>
                 </div>
 
-                <div className="flex items-center gap-4 mt-4 lg:mt-0">
-                  <div className="relative flex-1 lg:flex-none">
+                <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:gap-4">
+                  <div className="relative flex-1 sm:flex-none">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
                     <Input
                       placeholder="Search patients..."
-                      className="pl-8 w-full lg:w-[250px] bg-white/80 backdrop-blur-sm"
+                      className="pl-8 w-full sm:w-[250px] bg-white/80 backdrop-blur-sm h-10 sm:h-9"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -278,7 +293,7 @@ export default function Queue() {
                     )}
                   </div>
                   <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                    <SelectTrigger className="w-[180px] bg-white/80 backdrop-blur-sm">
+                    <SelectTrigger className="w-full sm:w-[180px] bg-white/80 backdrop-blur-sm h-10 sm:h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -295,7 +310,7 @@ export default function Queue() {
                       size="sm"
                       onClick={handleRefresh}
                       disabled={refreshing}
-                      className="bg-white/80 backdrop-blur-sm hover:bg-white"
+                      className="w-full sm:w-auto bg-white/80 backdrop-blur-sm hover:bg-white h-10 sm:h-9"
                     >
                       <motion.div
                         animate={refreshing ? { rotate: 360 } : {}}
@@ -312,7 +327,7 @@ export default function Queue() {
 
               {/* Stats Cards */}
               <motion.div
-                className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
@@ -394,7 +409,7 @@ export default function Queue() {
                         </CardHeader>
                         <CardContent>
                           <AnimatePresence>
-                            {filteredQueue(queueType).length === 0 ? (
+                            {filteredQueue(queueType as QueueType).length === 0 ? (
                               <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -412,49 +427,55 @@ export default function Queue() {
                                 initial="hidden"
                                 animate="visible"
                               >
-                                {filteredQueue(queueType).map((patient, index) => (
+                                {filteredQueue(queueType as QueueType).map((patient, index) => (
                                   <motion.div
                                     key={patient.id}
                                     variants={itemVariants}
-                                    className="p-4 border rounded-lg hover:shadow-md transition-all duration-200 group bg-gray-50/80 hover:bg-gray-100/80"
+                                    className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-all duration-200 group bg-gray-50/80 hover:bg-gray-100/80"
                                     whileHover={{ scale: 1.01 }}
                                   >
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform duration-300">
+                                    <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center justify-between">
+                                      <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-[#581c87] to-[#312e81] rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base group-hover:scale-110 transition-transform duration-300">
                                           {patient.name
                                             .split(" ")
                                             .map((n) => n[0])
                                             .join("")}
                                         </div>
-                                        <div>
-                                          <h3 className="font-semibold text-gray-900">{patient.name}</h3>
-                                          <div className="flex items-center gap-2 mt-1">
-                                            <p className="text-sm text-gray-600">ID: {patient.id}</p>
-                                            <p className="text-sm text-gray-600">Dept: {patient.department}</p>
+                                        <div className="flex-1 min-w-0">
+                                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
+                                            {patient.name}
+                                          </h3>
+                                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                                            <p className="text-xs sm:text-sm text-gray-600">ID: {patient.id}</p>
+                                            <p className="text-xs sm:text-sm text-gray-600">
+                                              Dept: {patient.department}
+                                            </p>
                                           </div>
                                           <div className="flex items-center gap-2 mt-1">
-                                            <Clock className="h-4 w-4 text-gray-500" />
-                                            <span className="text-sm text-gray-600">
+                                            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                                            <span className="text-xs sm:text-sm text-gray-600">
                                               Wait time: {patient.waitTime} min
                                             </span>
                                           </div>
                                         </div>
                                       </div>
-                                      <div className="flex items-center gap-3">
-                                        <div className="flex flex-col gap-2">
-                                          <Badge className={getPriorityColor(patient.priority)}>
+                                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                        <div className="flex flex-wrap gap-2">
+                                          <Badge className={`${getPriorityColor(patient.priority)} text-xs`}>
                                             {patient.priority} priority
                                           </Badge>
-                                          <Badge className={getStatusColor(patient.status)}>{patient.status}</Badge>
+                                          <Badge className={`${getStatusColor(patient.status)} text-xs`}>
+                                            {patient.status}
+                                          </Badge>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-wrap gap-2">
                                           {patient.status === "waiting" && (
                                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                               <Button
                                                 size="sm"
-                                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-                                                onClick={() => handleStartService(patient, queueType)}
+                                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs h-8"
+                                                onClick={() => handleStartService(patient, queueType as QueueType)}
                                               >
                                                 Start Service
                                               </Button>
@@ -464,10 +485,10 @@ export default function Queue() {
                                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                               <Button
                                                 size="sm"
-                                                className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white"
-                                                onClick={() => handleMoveToNext(patient, queueType)}
+                                                className="bg-gradient-to-r from-[#581c87] to-[#312e81] hover:from-[#6b21a8] hover:to-[#3730a3] text-white text-xs h-8"
+                                                onClick={() => handleMoveToNext(patient, queueType as QueueType)}
                                               >
-                                                <ArrowRight className="h-4 w-4 mr-1" />
+                                                <ArrowRight className="h-3 w-3 mr-1" />
                                                 Next Stage
                                               </Button>
                                             </motion.div>
@@ -476,8 +497,8 @@ export default function Queue() {
                                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                               <Button
                                                 size="sm"
-                                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-                                                onClick={() => handleRemoveFromQueue(patient, queueType)}
+                                                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs h-8"
+                                                onClick={() => handleRemoveFromQueue(patient, queueType as QueueType)}
                                               >
                                                 Complete
                                               </Button>
@@ -486,10 +507,10 @@ export default function Queue() {
                                           <Button
                                             variant="outline"
                                             size="sm"
-                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                            onClick={() => handleRemoveFromQueue(patient, queueType)}
+                                            className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8 w-8 p-0"
+                                            onClick={() => handleRemoveFromQueue(patient, queueType as QueueType)}
                                           >
-                                            <X className="h-4 w-4" />
+                                            <X className="h-3 w-3" />
                                           </Button>
                                         </div>
                                       </div>
@@ -507,6 +528,7 @@ export default function Queue() {
               </Tabs>
             </motion.div>
           </div>
+          <ScrollToTop />
         </PageTransition>
       </main>
     </div>
